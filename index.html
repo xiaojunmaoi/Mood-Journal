@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf6ee">
+  <meta name="description" content="心晴，一个温柔的情绪日记。记下此刻的心情，理解自己的变化，给自己一点关怀。">
+  <title>心晴 · 给情绪一个安放的地方</title>
+  <link rel="icon" href="assets/icons/sun.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="journal.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳转到主要内容</a>
+  <header class="site-header">
+    <a class="brand" href="#today" aria-label="心晴首页"><img src="assets/icons/sun.svg" alt="" class="brand-sun"><span>心晴</span></a>
+    <span class="brand-tagline handwritten">让情绪，也有安放的地方。</span>
+    <nav class="main-nav" aria-label="主要导航">
+      <a href="#today" data-page="today" class="active" aria-current="page">今日心情</a>
+      <a href="#review" data-page="review">情绪回顾</a>
+      <a href="#care" data-page="care">自我关怀</a>
+    </nav>
+    <button id="demo-toggle" class="text-button demo-toggle"><img src="assets/icons/leaf.svg" alt="" class="icon"> <span>查看示例</span><img src="assets/icons/caret-right.svg" alt="" class="icon small"></button>
+  </header>
+
+  <div id="demo-banner" class="notice demo-banner" hidden>正在浏览示例手帐，所有内容均为演示数据，不会改动你的个人记录。<button id="demo-exit" class="text-button">回到我的手帐</button></div>
+  <div id="storage-warning" class="notice warning" role="alert" hidden></div>
+
+  <div class="app-layout">
+    <aside class="date-rail" aria-label="今天的日期">
+      <div class="date-block"><p id="date-month">2026年9月</p><p id="date-weekday">周二</p><strong id="date-day">22</strong></div>
+      <div class="rail-rule"></div>
+      <p class="rail-mantra handwritten">慢慢来，<br>也没关系。</p>
+      <img class="daisies" src="assets/daisies-transparent.png" alt="" aria-hidden="true">
+      <p class="rail-footnote handwritten">在平凡的日子里，<br>也有细小而确定的光。</p>
+    </aside>
+
+    <main id="main" tabindex="-1">
+      <section id="page-today" class="page" aria-labelledby="today-title">
+        <div class="today-layout">
+          <div class="journal-column">
+            <div class="page-heading"><h1 id="today-title"><span>把今天的心情，</span><wbr><span>轻轻放在这里。</span></h1><p>不必完美，只需真实。这里会温柔地接住你的每一种情绪。</p></div>
+            <form id="mood-form">
+              <fieldset class="mood-field"><legend>今天的心情是？</legend><div class="mood-options" id="mood-options"></div></fieldset>
+              <fieldset class="tag-field"><legend>今天，什么影响了你？<span class="optional">选填 · 可多选</span></legend><div id="tag-options" class="tag-options"></div></fieldset>
+              <label for="journal-note" class="sr-only">一句话日记</label>
+              <div class="note-input"><textarea id="journal-note" maxlength="500" placeholder="刚刚发生了什么？简单写一句也可以。" rows="3"></textarea><span id="note-count">0 / 500</span></div>
+              <p id="form-error" class="form-error" role="alert" hidden></p>
+              <div class="form-actions"><button type="submit" id="save-entry" class="button primary">记下这一刻 <img src="assets/icons/arrow-right.svg" alt="" class="icon"></button><button type="button" id="cancel-edit" class="text-button" hidden>取消编辑</button></div>
+              <p class="privacy-note"><img src="assets/icons/lock-key.svg" alt="" class="icon small">记录仅保存在当前浏览器。</p>
+              <p id="save-success" class="save-success" role="status" hidden></p>
+            </form>
+            <section class="home-trend" aria-labelledby="home-trend-title"><div class="section-heading"><h2 id="home-trend-title">最近7天</h2><p>这些起伏，都是认真生活的痕迹。</p><span class="data-label" id="home-data-label">我的记录</span></div><div class="chart-wrap"><canvas id="home-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="home-chart-empty">你的手帐，从今天这一笔开始。<span>记录后，这里会慢慢画出你的心情轨迹。</span></p></div><button class="text-button chart-link" type="button" data-goto="review">翻看我的手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button></section>
+          </div>
+          <aside class="care-margin" aria-label="今日自我关怀建议"><div class="care-note"><div class="paper-tape" aria-hidden="true"></div><p class="eyebrow">给此刻的你</p><h2 id="suggestion-title">给自己一个小休息</h2><div class="note-rule"></div><p id="suggestion-copy">出去走走，给自己5分钟。</p><img src="assets/walking-transparent.png" class="walking-art" alt="手绘帆布鞋与植物枝叶"><p class="care-note-caption handwritten">走一走，<br>风会带来新的心情。</p><button type="button" id="suggestion-action" class="button outline">查看散步建议 <img src="assets/icons/arrow-right.svg" alt="" class="icon"></button><button type="button" id="change-suggestion" class="text-button change-suggestion">换一个小建议</button></div><p class="margin-mantra handwritten">你已经做得很好了。</p><p class="margin-footnote">每一种心情，都值得被认真对待。</p><img src="assets/journals.png" class="journal-decoration" alt="" aria-hidden="true"></aside>
+        </div>
+      </section>
+
+      <section id="page-review" class="page" aria-labelledby="review-title" hidden>
+        <div class="page-heading"><span class="eyebrow">翻一翻，属于你的日子</span><h1 id="review-title">原来，我也走过了这么多。</h1><p>看见情绪的变化，也看见一直在努力的自己。</p></div>
+        <div class="review-summary"><section class="review-trend"><div class="section-heading"><h2>最近7天的心情</h2><span class="data-label" id="review-data-label">我的记录</span></div><div class="chart-wrap large"><canvas id="review-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="review-chart-empty">还没有这7天的记录<span>不必补齐过去，从此刻开始就好。</span></p></div><p class="muted small-text">同一天有多条记录时展示平均值；空白的日子不作推测。</p></section><section class="trigger-panel"><h2>情绪背后的小线索</h2><p class="muted small-text">最近7天，低落时常出现的影响因素</p><div id="trigger-bars"></div><p id="trigger-insight" class="insight"></p><p class="fine-print">这些只是记录中的关联，不代表因果或心理诊断。</p></section></div>
+        <section class="entry-section"><div class="section-heading"><h2>我的日记</h2><span id="entry-count" class="data-label"></span><button type="button" class="text-button" data-goto="today">再记一笔 <img src="assets/icons/plus.svg" alt="" class="icon small"></button></div><div id="entry-list"></div></section>
+      </section>
+
+      <section id="page-care" class="page" aria-labelledby="care-title" hidden>
+        <div class="page-heading"><span class="eyebrow">留一点时间，给自己</span><h1 id="care-title">不急着变好，先照顾好自己。</h1><p>选一件现在愿意做的小事。没有任务，也不需要打卡。</p></div>
+        <div class="care-grid">
+          <article class="activity-card breathing-card"><img src="assets/icons/wind.svg" class="activity-icon" alt=""><p class="eyebrow">慢下来 · 1分钟</p><h2>跟着呼吸，回到此刻</h2><p>暂时放下手边的事，跟随轻柔的节奏，自然地呼吸。</p><button class="button outline" data-activity="breathe">开始呼吸练习 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
+          <article class="activity-card rain-card"><img src="assets/icons/cloud-rain.svg" class="activity-icon" alt=""><p class="eyebrow">静一静 · 随时暂停</p><h2>听一场温柔的雨</h2><p>让轻轻的雨声陪你休息一会儿，给纷乱的思绪留一点空白。</p><button class="button outline" data-activity="rain">听听雨声 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
+          <article class="activity-card walking-card"><img src="assets/icons/footprints.svg" class="activity-icon" alt=""><p class="eyebrow">动一动 · 5分钟</p><h2>去外面，走一小段路</h2><p>舒展一下身体，看看身边的颜色，感受脚下的每一步。</p><button class="button outline" data-activity="walk">查看散步建议 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
+        </div>
+        <section class="care-history"><div class="section-heading"><h2>留给自己的小片刻</h2><span class="data-label">关怀记录</span></div><div id="care-history-list"></div></section>
+        <p class="care-disclaimer">这里提供日常自我关怀，不替代专业帮助。按舒服的节奏进行，任何时候都可以停下。</p>
+      </section>
+      <footer class="site-footer"><span>心晴 · 每一种感受，都有它的位置。</span><button class="text-button" id="privacy-button">关于数据与隐私</button></footer>
+    </main>
+  </div>
+
+  <dialog id="activity-dialog" aria-labelledby="activity-title"><button id="close-activity" class="icon-button dialog-close" aria-label="关闭练习"><img src="assets/icons/x.svg" alt=""></button><p class="eyebrow" id="activity-eyebrow">给自己一点时间</p><h2 id="activity-title">1分钟呼吸练习</h2><p id="activity-description" class="muted"></p><div id="activity-content"></div><div id="activity-controls" class="activity-controls"></div><div id="activity-feedback" hidden><h3>现在感觉怎么样？</h3><p class="muted small-text">任何感受都可以，没有标准答案。</p><div class="feedback-buttons"><button class="button outline" data-feedback="好一点了">好一点了</button><button class="button outline" data-feedback="差不多">差不多</button><button class="button outline" data-feedback="更难受了">更难受了</button></div><button id="skip-feedback" class="text-button">先不记录感受</button></div><p id="activity-note" class="fine-print">感到不适时，请停下来，恢复自然呼吸。</p></dialog>
+  <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">删除这条记录？</h2><p>这条记录删除后无法恢复，其他记录不受影响。</p><div class="dialog-actions"><button id="cancel-delete" class="button outline">保留记录</button><button id="confirm-delete" class="button primary">确认删除</button></div></dialog>
+  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-title"><button class="icon-button dialog-close" id="close-privacy" aria-label="关闭隐私说明"><img src="assets/icons/x.svg" alt=""></button><h2 id="privacy-title">只属于你的手帐</h2><p>日记与关怀反馈只保存在当前浏览器，不上传到服务器。不同设备、浏览器或网址之间不会自动同步。</p><p>清理浏览器数据或使用无痕模式，可能导致记录丢失。请不要把这里作为重要记录的唯一备份。</p><p>示例手帐与个人记录分开；情绪小结采用统计，关怀建议采用简单规则，没有将你的日记发送给 AI。</p><button class="button primary" id="privacy-understood">知道了</button></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

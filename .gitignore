@@ -16,3 +16,11 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+
+# Local verification captures and archives
+docs/*comparison.png
+docs/desktop-*.png
+docs/mobile-*.png
+output/
+assets/daisies.png
+assets/walking.png
