@@ -10,8 +10,9 @@
   let selectedMood = 0, currentSuggestion = 'walk', page = 'today', toastTimeout;
   let rawCorrupt = null;
   const drafts = { personal: { mood: 0, tags: [], note: '' }, demo: { mood: 4, tags: ['工作'], note: '' } };
-  const activityNames = { breathe: '1分钟呼吸练习', rain: '温柔雨声', walk: '5分钟散步' };
-  let activity = null, activityTimer = null, audioContext = null, rainSource = null, rainGain = null;
+  const activityNames = { breathe: '1分钟呼吸练习', rain: '温柔雨声', noise: '白噪音', walk: '5分钟散步' };
+  let activity = null, activityTimer = null;
+  const care = window.CareUI.create({ openActivity });
 
   function warning(message) { $('#storage-warning').textContent = message; $('#storage-warning').hidden = false; }
   try {
@@ -88,15 +89,8 @@
     toast(demo ? '已保存到示例手帐' : wasEditing ? '日记已更新' : '这一刻，已经好好收下了。');
   }
   function updateSuggestion(kind) {
-    currentSuggestion = kind;
-    const copy = { walk: ['给自己一个小休息', '出去走走，给自己5分钟。', '查看散步建议'], breathe: ['让心情缓一缓', '停下一分钟，陪自己呼吸。', '开始呼吸练习'], rain: ['听一场温柔的雨', '暂时放下思绪，安静一会儿。', '听听雨声'] }[kind];
-    $('#suggestion-title').textContent = copy[0]; $('#suggestion-copy').textContent = copy[1];
-    $('#suggestion-action').replaceChildren(document.createTextNode(copy[2]), Object.assign(icon('arrow-right'), { className: 'icon' }));
-    const illustration = $('.walking-art');
-    illustration.src = kind === 'walk' ? 'assets/walking-transparent.png' : kind === 'rain' ? 'assets/icons/cloud-rain.svg' : 'assets/daisies-transparent.png';
-    illustration.alt = kind === 'walk' ? '手绘帆布鞋与植物枝叶' : kind === 'rain' ? '雨云图案' : '手绘雏菊';
-    illustration.classList.toggle('suggestion-icon', kind === 'rain');
-    $('.care-note-caption').textContent = kind === 'walk' ? '走一走，风会带来新的心情。' : kind === 'rain' ? '让雨声，陪你安静一会儿。' : '自然地呼吸，慢慢地来。';
+    currentSuggestion = kind === 'rain' ? 'noise' : kind;
+    care.select(currentSuggestion);
   }
   function changePage(next) {
     $('#save-success').hidden = true;
@@ -172,7 +166,7 @@
     const list = $('#care-history-list'); list.replaceChildren();
     if (!feedbackData().length) { list.append(emptyState('给自己留一点时间，就很好。', demo ? '在示例中也可以体验一次练习，反馈不会写入个人记录。' : '完成一项小练习后，这里会收好你的关怀记录。', false)); return; }
     [...feedbackData()].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 12).forEach(item => {
-      const row = el('div', 'care-history-row'); row.append(el('span', '', activityNames[item.kind]), el('span', 'care-feedback-label', item.feedback), el('time', 'date', shortDate(item.date))); list.append(row);
+      const row = el('div', 'care-history-row'); row.append(el('span', '', item.kind === 'noise' && window.CareUI.sounds[item.sound] ? `白噪音 · ${window.CareUI.sounds[item.sound].name}` : activityNames[item.kind]), el('span', 'care-feedback-label', item.feedback), el('time', 'date', shortDate(item.date))); list.append(row);
     });
   }
   function renderData() {
@@ -183,15 +177,13 @@
 
   function cleanupActivity() {
     clearInterval(activityTimer); activityTimer = null;
-    try { rainSource?.stop(); } catch { /* already stopped */ }
-    rainSource = null; rainGain = null;
-    if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
+    care.stopSound();
   }
   function control(text, className, handler) { const button = el('button', `button ${className}`, text); button.type = 'button'; button.addEventListener('click', handler); return button; }
   function clockText(seconds) { return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`; }
   function elapsed() { return activity.elapsed + (activity.running ? Date.now() - activity.started : 0); }
   function updateTimer() {
-    if (!activity || activity.kind === 'rain') return;
+    if (!activity || activity.kind === 'noise') return;
     const milliseconds = elapsed(), seconds = Math.max(0, activity.duration - Math.floor(milliseconds / 1000));
     $('#timer-readout').textContent = clockText(seconds);
     if (activity.kind === 'breathe') {
@@ -206,57 +198,28 @@
     else { activity.running = true; activity.started = Date.now(); $('#timer-toggle').textContent = '暂停一下'; activityTimer = setInterval(updateTimer, 250); }
     updateTimer();
   }
-  async function toggleRain() {
-    const session = activity;
-    const isCurrent = () => activity === session && $('#activity-dialog').open;
-    const button = $('#rain-toggle');
-    const status = $('#rain-status');
-    button.disabled = true;
-    try {
-      if (audioContext) {
-        const context = audioContext;
-        if (context.state === 'running') { await context.suspend(); if (!isCurrent()) return; button.textContent = '继续播放'; status.textContent = '雨声已暂停'; }
-        else { await context.resume(); if (!isCurrent()) return; button.textContent = '暂停雨声'; status.textContent = '雨声正在轻轻落下'; }
-      } else {
-        const Context = window.AudioContext || window.webkitAudioContext;
-        if (!Context) throw new Error('unsupported');
-        audioContext = new Context();
-        const length = audioContext.sampleRate * 4, buffer = audioContext.createBuffer(2, length, audioContext.sampleRate);
-        for (let channel = 0; channel < 2; channel++) { const samples = buffer.getChannelData(channel); let last = 0; for (let i = 0; i < length; i++) { const white = Math.random() * 2 - 1; last = (last + .018 * white) / 1.018; samples[i] = last * 4; } }
-        rainSource = audioContext.createBufferSource(); rainSource.buffer = buffer; rainSource.loop = true;
-        const filter = audioContext.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 2400;
-        rainGain = audioContext.createGain(); rainGain.gain.value = Number($('#rain-volume').value) / 100 * .65;
-        rainSource.connect(filter); filter.connect(rainGain); rainGain.connect(audioContext.destination);
-        rainSource.start(); await audioContext.resume();
-        if (!isCurrent()) return;
-        button.textContent = '暂停雨声'; status.textContent = '雨声正在轻轻落下';
-      }
-    } catch { if (isCurrent()) { cleanupActivity(); status.textContent = '这个浏览器暂时无法播放声音，可以换试呼吸练习。'; button.textContent = '重新尝试'; } }
-    finally { if (isCurrent()) button.disabled = false; }
-  }
-  function openActivity(kind) {
+  function openActivity(kind, autoPlay = false) {
     cleanupActivity();
     activity = { kind, elapsed: 0, running: false, started: 0, duration: kind === 'walk' ? 300 : 60, demo, entryId: data().length ? [...data()].sort((a,b) => new Date(b.date) - new Date(a.date))[0].id : null };
     $('#activity-title').textContent = activityNames[kind];
+    $('#activity-dialog').classList.toggle('noise-dialog', kind === 'noise');
     $('#activity-eyebrow').textContent = demo ? '示例体验 · 不影响个人记录' : '把这一小段时间，留给自己';
     $('#activity-feedback').hidden = true; $('#activity-content').hidden = false; $('#activity-controls').hidden = false;
     const content = $('#activity-content'), controls = $('#activity-controls'); content.replaceChildren(); controls.replaceChildren();
-    $('#activity-description').textContent = { breathe: '不用刻意深呼吸，以舒服的节奏，轻轻吸气、慢慢呼气。', rain: '把音量调到舒服的位置，让轻柔的雨声陪着你。', walk: '不用走很远，也不用计步。只是一段属于自己的小休息。' }[kind];
-    $('#activity-note').textContent = kind === 'breathe' ? '感到不适时，请停下来，恢复自然呼吸。' : kind === 'rain' ? '雨声在当前设备实时合成，关闭窗口会停止播放。' : '留意周围环境，以身体舒服为准。计时暂停后可以随时继续。';
+    $('#activity-description').textContent = { breathe: '不用刻意深呼吸，以舒服的节奏，轻轻吸气、慢慢呼气。', noise: '选一种自然的声音，陪自己慢下来。', walk: '不用走很远，也不用计步。只是一段属于自己的小休息。' }[kind];
+    $('#activity-note').textContent = kind === 'breathe' ? '感到不适时，请停下来，恢复自然呼吸。' : kind === 'noise' ? '关闭窗口后，声音会停止。' : '留意周围环境，以身体舒服为准。计时暂停后可以随时继续。';
     if (kind === 'breathe') { const orb = el('div', 'breathing-orb', '准备好了'); orb.id = 'breathing-orb'; content.append(orb); }
     if (kind === 'walk') {
       const steps = el('ol', 'walk-steps'); ['起身舒展一下，找一段安全、方便行走的路。', '放慢脚步，看看身边三样不同颜色的事物。', '把注意力放在脚步上，不急着想下一件事。'].forEach(text => steps.append(el('li', '', text))); content.append(steps);
     }
-    if (kind === 'rain') {
-      const picture = icon('cloud-rain'); picture.className = 'rain-visual'; content.append(picture);
-      const status = el('p', 'activity-status', '准备好时，点一下播放'); status.id = 'rain-status'; status.setAttribute('role', 'status'); content.append(status);
-      const label = el('label', 'volume-control', '音量'); const range = el('input'); range.type = 'range'; range.min = '0'; range.max = '100'; range.value = '40'; range.id = 'rain-volume'; range.setAttribute('aria-label', '雨声音量'); range.addEventListener('input', () => { if (rainGain) rainGain.gain.value = Number(range.value) / 100 * .65; }); label.append(range); content.append(label);
-      const play = control('播放雨声', 'primary', toggleRain); play.id = 'rain-toggle'; controls.append(play, control('结束休息', 'outline', finishActivity));
+    if (kind === 'noise') {
+      care.openSound({ content, controls, finish: finishActivity });
     } else {
       const timer = el('p', 'timer-readout', clockText(activity.duration)); timer.id = 'timer-readout'; timer.setAttribute('aria-label', '剩余时间'); content.append(timer);
       const toggle = control('开始练习', 'primary', toggleTimer); toggle.id = 'timer-toggle'; controls.append(toggle, control('结束并记录感受', 'outline', finishActivity));
     }
     $('#activity-dialog').showModal();
+    if (kind === 'noise' && autoPlay) care.playSound();
   }
   function finishActivity() {
     if (!activity) return;
@@ -267,7 +230,7 @@
   }
   function saveFeedback(feedback) {
     if (!activity) return;
-    const item = { kind: activity.kind, date: new Date().toISOString(), feedback, entryId: activity.entryId };
+    const item = { kind: activity.kind, ...(activity.kind === 'noise' ? { sound: care.selectedSound() } : {}), date: new Date().toISOString(), feedback, entryId: activity.entryId };
     const next = [...(activity.demo ? demoCare : careLogs), item];
     if (!activity.demo && !persist(CARE_KEY, next)) { toast('反馈未能保存，请先检查浏览器存储。'); return; }
     if (activity.demo) demoCare = next; else careLogs = next;
@@ -283,8 +246,6 @@
   window.addEventListener('hashchange', () => { if (['today', 'review', 'care'].includes(location.hash.slice(1))) changePage(location.hash.slice(1)); });
   $('.skip-link').addEventListener('click', event => { event.preventDefault(); $('#main').focus(); $('#main').scrollIntoView(); });
   let resizeTimeout; window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(renderData, 100); });
-  $('#suggestion-action').addEventListener('click', () => openActivity(currentSuggestion));
-  $('#change-suggestion').addEventListener('click', () => { const options = ['walk', 'breathe', 'rain']; updateSuggestion(options[(options.indexOf(currentSuggestion) + 1) % options.length]); });
   $$('[data-activity]').forEach(button => button.addEventListener('click', () => openActivity(button.dataset.activity)));
   $('#close-activity').addEventListener('click', () => $('#activity-dialog').close());
   $('#activity-dialog').addEventListener('close', () => { if ($('#activity-dialog').open) return; cleanupActivity(); activity = null; });

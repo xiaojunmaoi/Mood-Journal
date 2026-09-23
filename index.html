@@ -8,7 +8,10 @@
   <title>心晴 · 给情绪一个安放的地方</title>
   <link rel="icon" href="assets/icons/sun.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="care.css">
   <script src="journal.js" defer></script>
+  <script src="nature-audio.js" defer></script>
+  <script src="care.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -53,7 +56,14 @@
             </form>
             <section class="home-trend" aria-labelledby="home-trend-title"><div class="section-heading"><h2 id="home-trend-title">最近7天</h2><p>这些起伏，都是认真生活的痕迹。</p><span class="data-label" id="home-data-label">我的记录</span></div><div class="chart-wrap"><canvas id="home-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="home-chart-empty">你的手帐，从今天这一笔开始。<span>记录后，这里会慢慢画出你的心情轨迹。</span></p></div><button class="text-button chart-link" type="button" data-goto="review">翻看我的手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button></section>
           </div>
-          <aside class="care-margin" aria-label="今日自我关怀建议"><div class="care-note"><div class="paper-tape" aria-hidden="true"></div><p class="eyebrow">给此刻的你</p><h2 id="suggestion-title">给自己一个小休息</h2><div class="note-rule"></div><p id="suggestion-copy">出去走走，给自己5分钟。</p><img src="assets/walking-transparent.png" class="walking-art" alt="手绘帆布鞋与植物枝叶"><p class="care-note-caption handwritten">走一走，<br>风会带来新的心情。</p><button type="button" id="suggestion-action" class="button outline">查看散步建议 <img src="assets/icons/arrow-right.svg" alt="" class="icon"></button><button type="button" id="change-suggestion" class="text-button change-suggestion">换一个小建议</button></div><p class="margin-mantra handwritten">你已经做得很好了。</p><p class="margin-footnote">每一种心情，都值得被认真对待。</p><img src="assets/journals.png" class="journal-decoration" alt="" aria-hidden="true"></aside>
+          <aside class="care-margin" aria-label="今日自我关怀建议">
+            <section id="care-carousel" class="care-carousel" role="region" aria-roledescription="轮播" aria-label="三种自我关怀便签" tabindex="0">
+              <div id="care-stage" class="care-stage"></div>
+              <div class="care-navigation"><button type="button" id="care-prev" class="carousel-arrow" aria-label="上一张便签"><img src="assets/icons/caret-left.svg" alt=""></button><div class="care-pagination"><div id="care-dots" class="care-dots"></div><p id="care-position" aria-live="polite" aria-atomic="true">散步 · 3 / 3</p></div><button type="button" id="care-next" class="carousel-arrow" aria-label="下一张便签"><img src="assets/icons/caret-right.svg" alt=""></button></div>
+              <p class="carousel-hint">左右切换，选一个此刻需要的小休息</p>
+            </section>
+            <p class="margin-mantra handwritten">你已经做得很好了。</p><p class="margin-footnote">每一种心情，都值得被认真对待。</p>
+          </aside>
         </div>
       </section>
 
@@ -67,13 +77,13 @@
         <div class="page-heading"><span class="eyebrow">留一点时间，给自己</span><h1 id="care-title">不急着变好，先照顾好自己。</h1><p>选一件现在愿意做的小事。没有任务，也不需要打卡。</p></div>
         <div class="care-grid">
           <article class="activity-card breathing-card"><img src="assets/icons/wind.svg" class="activity-icon" alt=""><p class="eyebrow">慢下来 · 1分钟</p><h2>跟着呼吸，回到此刻</h2><p>暂时放下手边的事，跟随轻柔的节奏，自然地呼吸。</p><button class="button outline" data-activity="breathe">开始呼吸练习 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
-          <article class="activity-card rain-card"><img src="assets/icons/cloud-rain.svg" class="activity-icon" alt=""><p class="eyebrow">静一静 · 随时暂停</p><h2>听一场温柔的雨</h2><p>让轻轻的雨声陪你休息一会儿，给纷乱的思绪留一点空白。</p><button class="button outline" data-activity="rain">听听雨声 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
+          <article class="activity-card noise-card"><img src="assets/icons/headphones.svg" class="activity-icon" alt=""><p class="eyebrow">静一静 · 白噪音</p><h2>给自己一段自然的声音</h2><p>细雨、海浪、森林、溪流，选一种此刻想听的声音。</p><div class="sound-preview" aria-label="提供细雨、海浪、森林和溪流四种自然声"><span><img src="assets/icons/cloud-rain.svg" alt="">细雨</span><span><img src="assets/icons/waves.svg" alt="">海浪</span><span><img src="assets/icons/tree.svg" alt="">森林</span><span><img src="assets/icons/drop.svg" alt="">溪流</span></div><button class="button outline" data-activity="noise">选择白噪音 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
           <article class="activity-card walking-card"><img src="assets/icons/footprints.svg" class="activity-icon" alt=""><p class="eyebrow">动一动 · 5分钟</p><h2>去外面，走一小段路</h2><p>舒展一下身体，看看身边的颜色，感受脚下的每一步。</p><button class="button outline" data-activity="walk">查看散步建议 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
         </div>
         <section class="care-history"><div class="section-heading"><h2>留给自己的小片刻</h2><span class="data-label">关怀记录</span></div><div id="care-history-list"></div></section>
         <p class="care-disclaimer">这里提供日常自我关怀，不替代专业帮助。按舒服的节奏进行，任何时候都可以停下。</p>
       </section>
-      <footer class="site-footer"><span>心晴 · 每一种感受，都有它的位置。</span><button class="text-button" id="privacy-button">关于数据与隐私</button></footer>
+      <footer class="site-footer"><span>心晴 · 每一种感受，都有它的位置。</span><div class="footer-links"><a href="assets/audio/CREDITS.html" target="_blank" rel="noopener">声音来源</a><button class="text-button" id="privacy-button">关于数据与隐私</button></div></footer>
     </main>
   </div>
 

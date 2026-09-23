@@ -4,13 +4,13 @@ const { execFileSync } = require('node:child_process');
 const assert = require('node:assert/strict');
 const binary = process.env.AGENT_BROWSER_BIN;
 if (!binary) throw new Error('Set AGENT_BROWSER_BIN first.');
-const session = 'xinqing-prototype';
+const session = process.env.BROWSER_SESSION || 'xinqing-regression-v2';
 function command(...args) { return execFileSync(binary, ['--session', session, ...args], { encoding: 'utf8', timeout: 30000 }); }
 function evaluate(code) { const result = execFileSync(binary, ['--session', session, 'eval', '--stdin'], { input: code, encoding: 'utf8', timeout: 30000 }); return JSON.parse(result.trim()); }
 function check(condition, message) { assert.ok(condition, message); console.log(`PASS: ${message}`); }
 const personalCount = () => evaluate("JSON.parse(localStorage.getItem('xinqing.entries.v1') || '[]').length");
 
-command('open', 'http://127.0.0.1:4173/#today');
+command('open', `${process.env.TEST_URL || 'http://127.0.0.1:4174'}/#today`);
 command('reload');
 command('click', '.mood-choice:nth-child(2)');
 command('click', '.tag-chip:nth-child(2)');
@@ -69,11 +69,13 @@ check(command('get', 'text', '#timer-readout').trim() === paused, 'pause freezes
 command('click', '#activity-controls .outline');
 command('click', '[data-feedback="好一点了"]');
 check(command('get', 'text', '#care-history-list').includes('好一点了'), 'care feedback is saved and displayed');
-command('click', '[data-activity=rain]');
-command('click', '#rain-toggle');
-check(command('get', 'text', '#rain-status').includes('正在'), 'rain audio starts from a user action');
-command('click', '#rain-toggle');
-check(command('get', 'text', '#rain-status').includes('暂停'), 'rain audio can pause');
+command('click', '[data-activity=noise]');
+command('click', '#noise-toggle');
+command('wait', '700');
+check(command('get', 'text', '#noise-status').includes('正在'), 'nature audio starts from a user action');
+command('click', '#noise-toggle');
+command('wait', '700');
+check(command('get', 'text', '#noise-status').includes('暂停'), 'nature audio can pause');
 command('click', '#close-activity');
 command('click', '[data-activity=walk]');
 check(evaluate('document.querySelectorAll(".walk-steps li").length') === 3, 'walking activity contains three actionable steps');

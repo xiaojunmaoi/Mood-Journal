@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node serve.cjs",
     "test": "node --test tests/*.test.cjs",
-    "check": "node --check app.js && node --check journal.js",
+    "check": "node --check app.js && node --check journal.js && node --check care.js && node --check nature-audio.js",
     "build": "node build.cjs"
   }
 }

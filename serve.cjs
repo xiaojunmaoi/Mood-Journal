@@ -5,8 +5,8 @@ const args = process.argv.slice(2);
 const option = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const port = Number(option('--port', 4173));
 const host = option('--host', '127.0.0.1');
-const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
-const allowed = new Set(['index.html', 'styles.css', 'app.js', 'journal.js']);
+const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.m4a': 'audio/mp4' };
+const allowed = new Set(['index.html', 'styles.css', 'care.css', 'app.js', 'journal.js', 'care.js', 'nature-audio.js']);
 http.createServer((req, res) => {
   let relative;
   try { relative = decodeURIComponent(new URL(req.url, 'http://localhost').pathname).replace(/^\/+/, '') || 'index.html'; } catch { res.writeHead(400).end(); return; }

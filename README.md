@@ -8,7 +8,9 @@
 
 - 五档情绪、影响因素、500字内日记，支持新增、编辑、确认删除。
 - 最近7天心情趋势、低落时常出现的标签、历史日记。
-- 1分钟呼吸计时、可暂停并调节音量的合成雨声、5分钟散步引导、活动后反馈。
+- 1分钟呼吸计时、细雨/海浪/森林/溪流四种自然白噪音、5分钟散步引导、活动后反馈。
+- 首页三张胶片式关怀便签，支持箭头、圆点、侧边点击、键盘和手机滑动。
+- 白噪音支持音量、暂停继续、柔和切换，以及5/15/30分钟定时停止。
 - 独立示例手帐，不改动个人记录；支持电脑与手机。
 
 ## 运行
@@ -25,7 +27,7 @@ npm run check
 npm run build
 ```
 
-浏览器交互验证位于 tests/browser-check.cjs。先启动本地服务，并将 AGENT_BROWSER_BIN 指向本机 agent-browser 可执行文件，脚本使用独立的 xinqing-prototype 会话。
+浏览器交互验证位于 tests/browser-check.cjs 和 tests/care-browser-check.cjs。先启动本地服务，设置 AGENT_BROWSER_BIN，并用 TEST_URL 指定地址（默认 http://127.0.0.1:4174）。脚本使用独立会话。
 
 ## 数据与边界
 
@@ -33,7 +35,7 @@ npm run build
 
 情绪小结使用真实记录统计，推荐采用简单规则，未接入大模型，不把关联当作因果或诊断。产品用于日常自我关怀，不替代专业帮助。
 
-雨声通过 Web Audio 在本机合成，用户点击后才播放，关闭练习时停止。
+自然声文件随站点部署，不依赖外部音频地址。进入页面和切换便签不会自动播放；点击播放后开始，关闭窗口停止。暂停同时暂停定时，换声音保留剩余时间，旧雨声记录仍可读取。
 
 ## 部署与素材
 
@@ -42,3 +44,5 @@ npm run build
 水彩插画、纸张及表情由 Image Gen 生成。通用图标来自 [Phosphor Icons](https://github.com/phosphor-icons/core)，MIT 许可在 assets/icons/LICENSE。
 
 参考图在 docs/design-reference.png，验证记录见 design-qa.md。
+
+音频作者及授权见 [声音来源](assets/audio/CREDITS.html)。胶片式便签参考图在 docs/care-carousel-reference.png。

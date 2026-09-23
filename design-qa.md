@@ -45,3 +45,15 @@ P3：重新生成的插画笔触与原参考有自然差异，未逐像素复制
 - 保留原有文案、图表尺寸及布局。桌面截图：docs/desktop-empty-home.png、docs/desktop-empty-review.png；手机截图：docs/mobile-empty-home.png、docs/mobile-empty-review.png。
 - 独立 Chrome 会话验证：两处提示背景均为透明；示例数据能正常隐藏空态并显示趋势；390px 手机页面无横向溢出，图片完整加载，页面无未捕获错误。
 - 现有6项核心测试、JavaScript语法检查和静态构建通过。
+## 2026-09-23 白噪音与胶片式便签升级
+
+final result: passed
+
+- 视觉依据：docs/care-carousel-reference.png，为用户确认的胶片便签效果图。保留纸纹、胶带、水彩插画、居中便签和两侧露边、箭头与三点页码；根据首页侧栏宽度收窄侧卡露出区域，增加可点击的分类边签。参考为放大组件示意，实际页面保留原日记区域。
+- 对比证据：docs/care-carousel-comparison.png；最终截图包括 docs/desktop-care-carousel-final.png、docs/desktop-care-entry-final.png、docs/desktop-noise-player-final.png、docs/mobile-care-carousel-final.png、docs/mobile-noise-player-final.png。
+- 目检纸色、字体、标题换行、图片透明边缘、按钮间距与手机布局。修复便签底部文案挤压和反馈提示遮挡按钮；两侧便签内容不参与键盘焦点，减少动态效果偏好下取消动效。
+- 四种本地自然声实测解码并推进播放时间；播放中切换后只有一个声源继续播放，暂停、音量、关闭停止均通过。定时在暂停时冻结，到期停止并打开反馈，反馈保存声音类别。
+- 三张轮播支持箭头、圆点、侧边点击、键盘和模拟触摸滑动。320/390/768/1024/1487/1912px 无横向溢出，便签底部文案均在纸张内。
+- 核心与音频生命周期9项自动测试通过，完整日记/示例隔离/呼吸/散步浏览器回归通过，白噪音与轮播专项验收通过，无未捕获页面错误。
+- 直接以 file:// 打开构建后的 HTML，白噪音播放与关闭通过。浏览器使用独立 Chrome 会话；未宣称已测试其他浏览器的音频行为。最终旧预览会话失去响应，切换到仍有效的验收会话核对侧签并截图成功。
+- 新增音频作者、来源与许可证页面 assets/audio/CREDITS.html；所有声音与插画跟随静态部署，运行不依赖第三方素材站。
