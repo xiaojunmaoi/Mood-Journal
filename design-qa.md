@@ -39,3 +39,9 @@ final result: passed
 ## 可后续微调
 
 P3：重新生成的插画笔触与原参考有自然差异，未逐像素复制。手机为响应式重排，源图未提供手机设计。
+## 2026-09-23 空态背景优化
+
+- 首页和情绪回顾的空态提示改为透明背景，直接露出页面纸纹；空态网格降低不透明度，有记录时保留原来的网格和曲线。
+- 保留原有文案、图表尺寸及布局。桌面截图：docs/desktop-empty-home.png、docs/desktop-empty-review.png；手机截图：docs/mobile-empty-home.png、docs/mobile-empty-review.png。
+- 独立 Chrome 会话验证：两处提示背景均为透明；示例数据能正常隐藏空态并显示趋势；390px 手机页面无横向溢出，图片完整加载，页面无未捕获错误。
+- 现有6项核心测试、JavaScript语法检查和静态构建通过。

@@ -121,20 +121,21 @@
   function chart(canvas, emptyEl) {
     if (!canvas.clientWidth) return;
     const days = J.weekly(data()), width = canvas.clientWidth, height = canvas.clientHeight;
+    const hasRecords = days.some(d => d.value !== null);
     const scale = window.devicePixelRatio || 1; canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
     const ctx = canvas.getContext('2d'); ctx.scale(scale, scale);
     const left = width < 380 ? 43 : 51, right = 15, top = 12, bottom = 28;
     const px = i => left + i * (width - left - right) / 6;
     const py = value => top + (5 - value) / 4 * (height - top - bottom);
     ctx.font = `${width < 380 ? 10 : 11}px "Microsoft YaHei", sans-serif`; ctx.textBaseline = 'middle';
-    [1, 3, 5].forEach(value => { const y = py(value); ctx.strokeStyle = '#ded5c875'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(width - right, y); ctx.stroke(); ctx.fillStyle = '#998b79'; ctx.textAlign = 'right'; ctx.fillText(J.moods[value - 1], left - 11, y); });
-    days.forEach((day, i) => { const x = px(i); ctx.strokeStyle = '#e4dbcf66'; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, height - bottom); ctx.stroke(); ctx.fillStyle = i === 6 ? '#b9654b' : '#9b8e7c'; ctx.textAlign = 'center'; ctx.fillText(day.label, x, height - 9); });
+    [1, 3, 5].forEach(value => { const y = py(value); ctx.strokeStyle = hasRecords ? '#ded5c875' : '#ded5c83b'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(width - right, y); ctx.stroke(); ctx.fillStyle = '#998b79'; ctx.textAlign = 'right'; ctx.fillText(J.moods[value - 1], left - 11, y); });
+    days.forEach((day, i) => { const x = px(i); ctx.strokeStyle = hasRecords ? '#e4dbcf66' : '#e4dbcf20'; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, height - bottom); ctx.stroke(); ctx.fillStyle = i === 6 ? '#b9654b' : '#9b8e7c'; ctx.textAlign = 'center'; ctx.fillText(day.label, x, height - 9); });
     ctx.strokeStyle = '#bd795f'; ctx.lineWidth = 1.4; ctx.lineJoin = 'round'; ctx.beginPath(); let started = false;
     days.forEach((day, i) => { if (day.value === null) { started = false; return; } if (started) ctx.lineTo(px(i), py(day.value)); else ctx.moveTo(px(i), py(day.value)); started = true; }); ctx.stroke();
     days.forEach((day, i) => { if (day.value === null) return; ctx.beginPath(); ctx.arc(px(i), py(day.value), 4.4, 0, Math.PI * 2); ctx.fillStyle = '#b96a50'; ctx.fill(); });
     const summary = days.map(d => `${d.label}：${d.value === null ? '无记录' : `${d.value.toFixed(1)}分，${d.count}条记录`}`).join('；');
     canvas.setAttribute('aria-label', `最近7天心情自评（1至5分）。${summary}`);
-    emptyEl.hidden = days.some(d => d.value !== null);
+    emptyEl.hidden = hasRecords;
   }
   function renderTriggers() {
     const stats = J.triggers(data()), container = $('#trigger-bars'); container.replaceChildren();
