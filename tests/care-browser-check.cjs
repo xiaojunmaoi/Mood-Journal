@@ -8,7 +8,9 @@ function evaluate(code) { return JSON.parse(execFileSync(binary, ['--session', s
 function check(value, text) { assert.ok(value, text); console.log(`PASS: ${text}`); }
 const text = selector => command('get', 'text', selector).trim();
 command('open', process.env.TEST_URL || 'http://127.0.0.1:4174');
+command('reload');
 command('set', 'viewport', '1487', '1058');
+evaluate('window.scrollTo(0,0); true');
 evaluate(`window.__media = []; const NativeAudio = window.Audio; window.Audio = function(src) { const media = new NativeAudio(src); window.__media.push(media); return media; }; true`);
 check(evaluate('document.querySelectorAll(".care-slide").length === 3'), 'exactly three care notes');
 command('click', '#care-next');
@@ -19,7 +21,7 @@ command('click', '.care-dot:nth-child(2)');
 command('wait', '450');
 check(text('#care-position').includes('白噪音 · 2 / 3'), 'position dots select the named note');
 check(evaluate('document.querySelectorAll(".care-slide:not([inert])").length === 1'), 'only the current note controls enter keyboard navigation');
-command('click', '.care-slide-noise [data-sound=forest]');
+command('click', '.care-slide-noise button[data-sound=forest]');
 check(evaluate('window.__media.length === 0'), 'changing a sound selection never auto plays');
 check(text('[data-care-start=noise]').includes('森林'), 'selected sound updates the homepage action');
 command('click', '[data-care-start=noise]');

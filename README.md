@@ -9,8 +9,8 @@
 - 五档情绪、影响因素、500字内日记，支持新增、编辑、确认删除。
 - 最近7天心情趋势、低落时常出现的标签、历史日记。
 - 1分钟呼吸计时、细雨/海浪/森林/溪流四种自然白噪音、5分钟散步引导、活动后反馈。
-- 首页三张胶片式关怀便签，支持箭头、圆点、侧边点击、键盘和手机滑动。
-- 白噪音支持音量、暂停继续、柔和切换，以及5/15/30分钟定时停止。
+- 首页三张关怀便签向右依次叠放，支持箭头、圆点、右侧分类边签、键盘和手机滑动。三个圆点固定对应呼吸、白噪音、散步；右侧最近的纸张始终是循环顺序中的下一张。
+- 白噪音支持音量、暂停继续、柔和切换，以及5/15/30分钟定时停止。四种插画预加载并与所选声音同步，选中项显示勾选；加载失败可重试。
 - 独立示例手帐，不改动个人记录；支持电脑与手机。
 
 ## 运行
@@ -27,7 +27,7 @@ npm run check
 npm run build
 ```
 
-浏览器交互验证位于 tests/browser-check.cjs 和 tests/care-browser-check.cjs。先启动本地服务，设置 AGENT_BROWSER_BIN，并用 TEST_URL 指定地址（默认 http://127.0.0.1:4174）。脚本使用独立会话。
+浏览器交互验证位于 tests/browser-check.cjs、tests/care-browser-check.cjs 和 tests/stack-browser-check.cjs。先启动本地服务，设置 AGENT_BROWSER_BIN，并用 TEST_URL 指定地址（默认 http://127.0.0.1:4174）。脚本使用独立会话。
 
 ## 数据与边界
 
@@ -45,4 +45,4 @@ npm run build
 
 参考图在 docs/design-reference.png，验证记录见 design-qa.md。
 
-音频作者及授权见 [声音来源](assets/audio/CREDITS.html)。胶片式便签参考图在 docs/care-carousel-reference.png。
+音频作者及授权见 [声音来源](assets/audio/CREDITS.html)。便签右侧叠放参考图在 docs/care-stack-reference.png，之前的双侧轮播参考保留在 docs/care-carousel-reference.png。

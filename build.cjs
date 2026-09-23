@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const output = path.join(__dirname, 'dist');
-const files = ['index.html', 'styles.css', 'care.css', 'journal.js', 'app.js', 'care.js', 'nature-audio.js', 'assets/sound-rain.png', 'assets/sound-ocean.png', 'assets/sound-forest.png', 'assets/sound-stream.png', 'assets/paper.png', 'assets/mood-faces.png', 'assets/daisies-transparent.png', 'assets/walking-transparent.png', 'assets/journals.png'];
+const files = ['index.html', 'styles.css', 'care.css', 'journal.js', 'app.js', 'care.js', 'nature-audio.js', 'assets/sound-rain.webp', 'assets/sound-ocean.webp', 'assets/sound-forest.webp', 'assets/sound-stream.webp', 'assets/paper.png', 'assets/mood-faces.png', 'assets/daisies-transparent.png', 'assets/walking-transparent.png', 'assets/journals.png'];
 for (const file of files) {
   const destination = path.join(output, file);
   fs.mkdirSync(path.dirname(destination), { recursive: true });

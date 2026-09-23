@@ -8,7 +8,7 @@
   };
   const notes = [
     { kind: 'breathe', name: '呼吸', title: '慢下来，和自己在一起。', copy: '停下一分钟，陪自己呼吸。', image: 'assets/daisies-transparent.png', caption: '一呼一吸，都是新的开始。', action: '开始呼吸练习' },
-    { kind: 'noise', name: '白噪音', title: '让自然，陪你静一静。', copy: '选一种声音，给思绪留一点空白。', image: 'assets/sound-ocean.png', caption: '可随时暂停，按自己的节奏来。', action: '播放海浪' },
+    { kind: 'noise', name: '白噪音', title: '让自然，陪你静一静。', copy: '选一种声音，给思绪留一点空白。', caption: '可随时暂停，按自己的节奏来。', action: '播放海浪' },
     { kind: 'walk', name: '散步', title: '走一走，看见不一样的风景。', copy: '出去走走，给自己5分钟。', image: 'assets/walking-transparent.png', caption: '走一走，风会带来新的心情。', action: '查看散步建议' }
   ];
   const make = (tag, className, text) => { const n = document.createElement(tag); if (className) n.className = className; if (text) n.textContent = text; return n; };
@@ -24,12 +24,48 @@
     const stage = document.querySelector('#care-stage');
     const dots = document.querySelector('#care-dots');
     const soundButtons = [];
+    const artworks = {};
+    let artStatus, artRetry;
+    function renderArtwork() {
+      Object.entries(artworks).forEach(([key, entry]) => { entry.img.hidden = key !== selected || entry.state !== 'ready'; });
+      const state = artworks[selected]?.state;
+      artStatus.hidden = state === 'ready';
+      artStatus.textContent = state === 'error' ? '插画暂时没能加载。' : `正在准备${sounds[selected].name}插画…`;
+      artRetry.hidden = state !== 'error';
+    }
+    function loadArtwork(key, retry = false) {
+      const entry = artworks[key], version = ++entry.version;
+      entry.state = 'loading';
+      entry.img.onload = async () => {
+        try {
+          await entry.img.decode();
+          if (version === entry.version) { entry.state = 'ready'; renderArtwork(); }
+        } catch {
+          if (version === entry.version) { entry.state = 'error'; renderArtwork(); }
+        }
+      };
+      entry.img.onerror = () => { if (version === entry.version) { entry.state = 'error'; renderArtwork(); } };
+      entry.img.src = `assets/sound-${key}.webp${retry ? `?retry=${Date.now()}` : ''}`;
+      renderArtwork();
+    }
+    function buildArtwork() {
+      const gallery = make('div', 'note-art sound-art-gallery');
+      artStatus = make('p', 'sound-art-status'); artStatus.setAttribute('role', 'status');
+      artRetry = button('重新加载插画', 'sound-art-retry', () => loadArtwork(selected, true)); artRetry.hidden = true;
+      Object.entries(sounds).forEach(([key, sound]) => {
+        const img = make('img', 'sound-art'); img.dataset.sound = key; img.alt = `水彩${sound.name}`; img.draggable = false; img.hidden = true;
+        artworks[key] = { img, state: 'loading', version: 0 }; gallery.append(img);
+      });
+      gallery.append(artStatus, artRetry);
+      Object.keys(sounds).forEach(key => loadArtwork(key));
+      return gallery;
+    }
     function buildSoundChoices(container, detailed, choose) {
       container.setAttribute('role', 'group'); container.setAttribute('aria-label', '选择自然声音');
       Object.entries(sounds).forEach(([key, sound]) => {
         const b = button('', detailed ? 'sound-tile' : 'sound-chip', () => choose(key));
         b.dataset.sound = key; b.setAttribute('aria-label', sound.name); b.setAttribute('aria-pressed', String(key === selected));
-        if (detailed) b.append(image(`assets/sound-${key}.png`, 'sound-thumbnail'));
+        if (detailed) b.append(image(`assets/sound-${key}.webp`, 'sound-thumbnail'));
         const label = make('span', 'sound-label'); label.append(icon(sound.icon), document.createTextNode(sound.name)); b.append(label);
         container.append(b); soundButtons.push(b);
       });
@@ -41,7 +77,7 @@
       const heading = make('h2', 'note-title');
       const lines = { breathe: ['慢下来，', '和自己在一起。'], noise: ['让自然，', '陪你静一静。'], walk: ['走一走，', '看见不一样的风景。'] };
       lines[note.kind].forEach(line => heading.append(make('span', '', line)));
-      const art = image(note.image, 'note-art', note.kind === 'breathe' ? '水彩雏菊' : note.kind === 'walk' ? '水彩帆布鞋' : '水彩海岸');
+      const art = note.kind === 'noise' ? buildArtwork() : image(note.image, 'note-art', note.kind === 'breathe' ? '水彩雏菊' : '水彩帆布鞋');
       const content = make('div', 'note-content');
       content.append(make('p', 'note-category', note.name), heading, make('p', 'note-copy', note.copy), art);
       if (note.kind === 'noise') {
@@ -52,16 +88,19 @@
       content.append(action, make('p', 'note-footnote', note.kind === 'noise' ? note.caption : note.kind === 'breathe' ? '1分钟 · 跟着舒服的节奏' : '5分钟 · 给自己一个小休息'));
       slide.append(tape, content); stage.append(slide);
       const peek = button('', `care-peek care-peek-${index}`, () => select(note.kind));
-      peek.append(make('span', '', note.name));
+      peek.dataset.kind = note.kind; peek.append(make('span', '', note.name));
       peek.setAttribute('aria-label', `切换到${note.name}便签`); stage.append(peek);
       const dot = button('', 'care-dot', () => select(note.kind)); dot.setAttribute('aria-label', `查看${note.name}，第${index + 1}张，共3张`); dots.append(dot);
+      dot.dataset.kind = note.kind;
       return { slide, peek, dot };
     });
     function select(kind) {
       const index = notes.findIndex(note => note.kind === kind); if (index < 0) return;
       active = index;
       slides.forEach(({ slide, peek, dot }, i) => {
-        const position = i === active ? 'current' : i === (active + 1) % 3 ? 'next' : 'previous';
+        const depth = (i - active + notes.length) % notes.length;
+        const position = depth === 0 ? 'current' : depth === 1 ? 'next' : 'previous';
+        slide.dataset.depth = depth; peek.dataset.depth = depth;
         slide.dataset.position = position; slide.inert = i !== active; slide.setAttribute('aria-hidden', String(i !== active));
         peek.hidden = i === active; peek.dataset.position = position;
         dot.setAttribute('aria-current', i === active ? 'true' : 'false');
@@ -91,7 +130,7 @@
         const b = soundButtons[i]; if (!b.isConnected) { soundButtons.splice(i, 1); continue; }
         b.setAttribute('aria-pressed', String(b.dataset.sound === key));
       }
-      const art = stage.querySelector('.care-slide-noise .note-art'); art.src = `assets/sound-${key}.png`; art.alt = `水彩${sounds[key].name}`;
+      renderArtwork();
       stage.querySelector('[data-care-start=noise] span').textContent = `播放${sounds[key].name}`;
       if (player) player.select(key);
       updateSoundUI();
