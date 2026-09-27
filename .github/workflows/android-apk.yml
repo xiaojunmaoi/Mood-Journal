@@ -1,0 +1,51 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies and verify web app
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run android:sync
+      - name: Prepare Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Build installable debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Verify APK signature and packaged resources
+        run: |
+          mkdir -p apk-output
+          cp android/app/build/outputs/apk/debug/app-debug.apk apk-output/xinqing-android-preview.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk-output/xinqing-android-preview.apk > apk-output/signature.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk-output/xinqing-android-preview.apk > apk-output/package-info.txt
+          python3 scripts/verify-apk.py apk-output/xinqing-android-preview.apk
+          cd apk-output
+          sha256sum xinqing-android-preview.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: xinqing-android-preview
+          path: apk-output/
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0

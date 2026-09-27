@@ -7,6 +7,15 @@
     "dev": "node serve.cjs",
     "test": "node --test tests/*.test.cjs",
     "check": "node --check app.js && node --check journal.js && node --check care.js && node --check nature-audio.js",
-    "build": "node build.cjs"
+    "build": "node build.cjs",
+    "android:sync": "node build-android.cjs && cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2"
   }
 }

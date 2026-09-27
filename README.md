@@ -2,6 +2,8 @@
 
 **在线体验**：[moodjournal-pi.vercel.app](https://moodjournal-pi.vercel.app/)
 
+**安卓测试版**：[APK 安装与构建说明](docs/ANDROID.md)
+
 **产品文档**：[详细 PRD](docs/PRD.md) · [原型截图说明](docs/images/README.md) · [交互与视觉验收](design-qa.md)
 
 心晴是一款面向年轻人的情绪日记与自我关怀工具，以温暖的数字手帐承载日常感受。用户可以从一个表情、一句话开始记录，回看情绪变化与常见情境，再通过呼吸练习、自然声或散步，给自己留一段短暂的休息时间。

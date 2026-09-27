@@ -24,3 +24,11 @@ docs/mobile-*.png
 output/
 assets/daisies.png
 assets/walking.png
+
+# Android local build files and signing material
+android/.gradle/
+android/local.properties
+*.apk
+*.aab
+*.jks
+*.keystore

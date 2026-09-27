@@ -1,0 +1,10 @@
+{
+  "appId": "com.xiaojunmaoi.xinqing",
+  "appName": "心晴",
+  "webDir": "dist",
+  "backgroundColor": "#faf6ee",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#faf6ee"
+  }
+}
