@@ -7,8 +7,9 @@ android {
         applicationId "com.xiaojunmaoi.xinqing"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0-preview"
+        versionCode 2
+        versionName "1.1.0"
+        manifestPlaceholders = [appLabel: "心晴"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,6 +18,13 @@ android {
         }
     }
     buildTypes {
+        albumPreview {
+            initWith debug
+            applicationIdSuffix ".album"
+            versionNameSuffix "-preview"
+            manifestPlaceholders = [appLabel: "心晴·影集"]
+            matchingFallbacks = ['debug']
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

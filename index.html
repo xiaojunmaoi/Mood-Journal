@@ -9,7 +9,11 @@
   <link rel="icon" href="assets/icons/sun.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="care.css">
+  <link rel="stylesheet" href="album.css">
+  <script src="assets/capacitor-core.js" defer></script>
   <script src="journal.js" defer></script>
+  <script src="journal-store.js" defer></script>
+  <script src="album.js" defer></script>
   <script src="nature-audio.js" defer></script>
   <script src="care.js" defer></script>
   <script src="app.js" defer></script>
@@ -51,10 +55,11 @@
               <div class="note-input"><textarea id="journal-note" maxlength="500" placeholder="刚刚发生了什么？简单写一句也可以。" rows="3"></textarea><span id="note-count">0 / 500</span></div>
               <p id="form-error" class="form-error" role="alert" hidden></p>
               <div class="form-actions"><button type="submit" id="save-entry" class="button primary">记下这一刻 <img src="assets/icons/arrow-right.svg" alt="" class="icon"></button><button type="button" id="cancel-edit" class="text-button" hidden>取消编辑</button></div>
+              <button type="button" class="text-button photo-entry-link" data-goto="write"><img src="assets/icons/notebook.svg" class="icon small" alt="">用照片和长日记，留住生活 <img src="assets/icons/arrow-right.svg" class="icon small" alt=""></button>
               <p class="privacy-note"><img src="assets/icons/lock-key.svg" alt="" class="icon small">记录仅保存在当前浏览器。</p>
               <p id="save-success" class="save-success" role="status" hidden></p>
             </form>
-            <section class="home-trend" aria-labelledby="home-trend-title"><div class="section-heading"><h2 id="home-trend-title">最近7天</h2><p>这些起伏，都是认真生活的痕迹。</p><span class="data-label" id="home-data-label">我的记录</span></div><div class="chart-wrap"><canvas id="home-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="home-chart-empty">你的手帐，从今天这一笔开始。<span>记录后，这里会慢慢画出你的心情轨迹。</span></p></div><button class="text-button chart-link" type="button" data-goto="review">翻看我的手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button></section>
+            <section class="home-trend" aria-labelledby="home-trend-title"><div class="section-heading"><h2 id="home-trend-title">最近7天</h2><p>这些起伏，都是认真生活的痕迹。</p><span class="data-label" id="home-data-label">我的记录</span></div><div class="chart-wrap"><canvas id="home-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="home-chart-empty">你的手帐，从今天这一笔开始。<span>记录后，这里会慢慢画出你的心情轨迹。</span></p></div><button class="text-button chart-link" type="button" data-goto="album">翻看我的手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button></section>
           </div>
           <aside class="care-margin" aria-label="今日自我关怀建议">
             <section id="care-carousel" class="care-carousel" role="region" aria-roledescription="轮播" aria-label="三种自我关怀便签" tabindex="0">
@@ -68,9 +73,10 @@
       </section>
 
       <section id="page-review" class="page" aria-labelledby="review-title" hidden>
+        <nav class="review-tabs" aria-label="回顾方式"><a href="#review" aria-current="page">情绪趋势</a><a href="#album">我的手帐</a></nav>
         <div class="page-heading"><span class="eyebrow">翻一翻，属于你的日子</span><h1 id="review-title">原来，我也走过了这么多。</h1><p>看见情绪的变化，也看见一直在努力的自己。</p></div>
         <div class="review-summary"><section class="review-trend"><div class="section-heading"><h2>最近7天的心情</h2><span class="data-label" id="review-data-label">我的记录</span></div><div class="chart-wrap large"><canvas id="review-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="review-chart-empty">还没有这7天的记录<span>不必补齐过去，从此刻开始就好。</span></p></div><p class="muted small-text">同一天有多条记录时展示平均值；空白的日子不作推测。</p></section><section class="trigger-panel"><h2>情绪背后的小线索</h2><p class="muted small-text">最近7天，低落时常出现的影响因素</p><div id="trigger-bars"></div><p id="trigger-insight" class="insight"></p><p class="fine-print">这些只是记录中的关联，不代表因果或心理诊断。</p></section></div>
-        <section class="entry-section"><div class="section-heading"><h2>我的日记</h2><span id="entry-count" class="data-label"></span><button type="button" class="text-button" data-goto="today">再记一笔 <img src="assets/icons/plus.svg" alt="" class="icon small"></button></div><div id="entry-list"></div></section>
+        <div class="review-album-link"><p>照片、文字与心情，都收在你的手帐里。</p><a href="#album" class="button outline">翻看我的手帐 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></a></div>
       </section>
 
       <section id="page-care" class="page" aria-labelledby="care-title" hidden>
@@ -83,13 +89,49 @@
         <section class="care-history"><div class="section-heading"><h2>留给自己的小片刻</h2><span class="data-label">关怀记录</span></div><div id="care-history-list"></div></section>
         <p class="care-disclaimer">这里提供日常自我关怀，不替代专业帮助。按舒服的节奏进行，任何时候都可以停下。</p>
       </section>
+      <section id="page-album" class="page" aria-labelledby="album-title" hidden>
+        <nav class="review-tabs" aria-label="回顾方式"><a href="#review">情绪趋势</a><a href="#album" aria-current="page">我的手帐</a></nav>
+        <div class="album-heading"><div><p class="eyebrow" id="album-month"></p><h1 id="album-title">把日子，收进相册。</h1></div><a href="#write" class="button outline album-new"><img src="assets/icons/plus.svg" class="icon" alt="">记一笔</a></div>
+        <div class="album-tools"><div class="album-filters" aria-label="手帐筛选"><button type="button" data-album-filter="all" aria-pressed="true">全部记录</button><button type="button" data-album-filter="photos" aria-pressed="false">有照片</button></div><button type="button" id="album-backup" class="text-button">备份与恢复</button></div>
+        <div id="album-list" class="album-grid" aria-live="polite"></div>
+        <p class="album-footnote">照片和文字，都安静地留在这里。</p>
+      </section>
+
+      <section id="page-editor" class="page" aria-label="日记编辑器" hidden>
+        <form id="album-form" novalidate>
+          <header class="editor-toolbar"><button type="button" id="editor-cancel" class="text-button">取消</button><h1 id="editor-heading">新建日记</h1><button type="submit" id="editor-save" class="button primary">保存</button></header>
+          <div class="editor-paper">
+            <div class="draft-row"><p id="draft-status" role="status">开始记录一个片刻</p><button type="button" id="discard-draft" class="text-button" hidden>丢弃草稿</button></div>
+            <label class="editor-date-label"><span>记录日期</span><input id="editor-date" type="date" required aria-label="记录日期"></label>
+            <label class="sr-only" for="editor-title">日记标题（选填）</label><input id="editor-title" class="editor-title" type="text" maxlength="40" placeholder="日记标题（选填）" autocomplete="off">
+            <label class="sr-only" for="editor-body">日记正文</label><textarea id="editor-body" class="editor-body" placeholder="今天想留住什么？一句话也好，一整篇也好。" rows="6"></textarea><p id="editor-count" class="editor-count">0 / 5000</p>
+            <div class="photos-heading"><h2>照片 <span id="photo-count">0 / 9</span></h2><div><button type="button" id="camera-photo" class="text-button">拍一张</button><button type="button" id="manage-photos" class="text-button" aria-pressed="false">管理</button></div></div>
+            <div id="editor-photos" class="editor-photos"></div><p class="photo-hint">首张作为封面；在「管理」中调整顺序和移除照片。</p>
+            <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden><input id="camera-input" type="file" accept="image/*" capture="environment" hidden>
+            <p id="photo-progress" class="photo-progress" role="status" hidden></p>
+            <button type="button" id="editor-mood" class="editor-mood"><span>此刻心情 <small>· 可选</small></span><span id="editor-mood-value">先不填写</span><img src="assets/icons/caret-right.svg" class="icon small" alt=""></button>
+            <details class="editor-tags"><summary>影响因素 · 可选</summary><div id="editor-tag-options" class="tag-options"></div></details>
+            <p id="editor-error" class="form-error" role="alert" hidden></p>
+            <p class="editor-privacy">照片和文字仅保存在这台设备，请定期备份。</p>
+          </div>
+        </form>
+      </section>
+
+      <section id="page-entry" class="page" aria-labelledby="detail-title" hidden>
+        <div class="detail-toolbar"><a href="#album" class="text-button"><img src="assets/icons/caret-left.svg" class="icon" alt="">我的手帐</a><details class="entry-menu"><summary aria-label="日记操作">更多</summary><div><button id="detail-edit" class="text-button" type="button">编辑日记</button><button id="detail-delete" class="text-button" type="button">删除日记</button></div></details></div>
+        <article class="reading-paper"><p id="detail-date" class="eyebrow"></p><h1 id="detail-title"></h1><div id="detail-photos" class="detail-photos"></div><p id="detail-note" class="detail-note"></p><div id="detail-mood" class="detail-mood"></div><div id="detail-tags" class="entry-tags"></div></article>
+      </section>
       <footer class="site-footer"><span>心晴 · 每一种感受，都有它的位置。</span><div class="footer-links"><a href="assets/audio/CREDITS.html" target="_blank" rel="noopener">声音来源</a><button class="text-button" id="privacy-button">关于数据与隐私</button></div></footer>
     </main>
   </div>
 
   <dialog id="activity-dialog" aria-labelledby="activity-title"><button id="close-activity" class="icon-button dialog-close" aria-label="关闭练习"><img src="assets/icons/x.svg" alt=""></button><p class="eyebrow" id="activity-eyebrow">给自己一点时间</p><h2 id="activity-title">1分钟呼吸练习</h2><p id="activity-description" class="muted"></p><div id="activity-content"></div><div id="activity-controls" class="activity-controls"></div><div id="activity-feedback" hidden><h3>现在感觉怎么样？</h3><p class="muted small-text">任何感受都可以，没有标准答案。</p><div class="feedback-buttons"><button class="button outline" data-feedback="好一点了">好一点了</button><button class="button outline" data-feedback="差不多">差不多</button><button class="button outline" data-feedback="更难受了">更难受了</button></div><button id="skip-feedback" class="text-button">先不记录感受</button></div><p id="activity-note" class="fine-print">感到不适时，请停下来，恢复自然呼吸。</p></dialog>
   <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">删除这条记录？</h2><p>这条记录删除后无法恢复，其他记录不受影响。</p><div class="dialog-actions"><button id="cancel-delete" class="button outline">保留记录</button><button id="confirm-delete" class="button primary">确认删除</button></div></dialog>
-  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-title"><button class="icon-button dialog-close" id="close-privacy" aria-label="关闭隐私说明"><img src="assets/icons/x.svg" alt=""></button><h2 id="privacy-title">只属于你的手帐</h2><p>日记与关怀反馈只保存在当前浏览器，不上传到服务器。不同设备、浏览器或网址之间不会自动同步。</p><p>清理浏览器数据或使用无痕模式，可能导致记录丢失。请不要把这里作为重要记录的唯一备份。</p><p>示例手帐与个人记录分开；情绪小结采用统计，关怀建议采用简单规则，没有将你的日记发送给 AI。</p><button class="button primary" id="privacy-understood">知道了</button></dialog>
+  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-title"><button class="icon-button dialog-close" id="close-privacy" aria-label="关闭隐私说明"><img src="assets/icons/x.svg" alt=""></button><h2 id="privacy-title">只属于你的手帐</h2><p>日记和照片保存在当前浏览器的本机数据库，关怀反馈保存在本机，不上传到服务器。不同设备、浏览器或网址之间不会自动同步。</p><p>清理浏览器数据或使用无痕模式，可能导致记录丢失。请通过「我的手帐 → 备份与恢复」导出图文日记。关怀练习反馈暂不包含在图文备份中。</p><p>示例手帐与个人记录分开；情绪小结采用统计，关怀建议采用简单规则，没有将你的日记发送给 AI。</p><button class="button primary" id="privacy-understood">知道了</button></dialog>
+  <dialog id="album-mood-dialog" class="small-dialog" aria-labelledby="album-mood-title"><button type="button" class="icon-button dialog-close" data-close="album-mood-dialog" aria-label="关闭心情选择"><img src="assets/icons/x.svg" alt=""></button><h2 id="album-mood-title">此刻，感觉怎么样？</h2><div id="album-mood-options" class="album-mood-options"></div><button type="button" id="clear-album-mood" class="text-button">先不填写心情</button></dialog>
+  <dialog id="photo-viewer" class="photo-viewer" aria-label="照片预览"><button type="button" class="icon-button viewer-close" data-close="photo-viewer" aria-label="关闭照片预览"><img src="assets/icons/x.svg" alt=""></button><img id="viewer-image" alt="日记照片"><div class="viewer-controls"><button type="button" id="viewer-prev" class="icon-button" aria-label="上一张照片"><img src="assets/icons/caret-left.svg" alt=""></button><p id="viewer-position" aria-live="polite"></p><button type="button" id="viewer-next" class="icon-button" aria-label="下一张照片"><img src="assets/icons/caret-right.svg" alt=""></button></div></dialog>
+  <dialog id="album-delete-dialog" class="small-dialog" aria-labelledby="album-delete-title"><h2 id="album-delete-title">删除这篇日记？</h2><p>文字和手帐中的照片副本会一起删除，手机相册原图不受影响。删除后无法撤销。</p><p id="album-delete-error" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" class="button outline" data-close="album-delete-dialog">保留日记</button><button type="button" id="album-delete-confirm" class="button primary">确认删除</button></div></dialog>
+  <dialog id="backup-dialog" class="small-dialog" aria-labelledby="backup-title"><button type="button" class="icon-button dialog-close" data-close="backup-dialog" aria-label="关闭备份窗口"><img src="assets/icons/x.svg" alt=""></button><h2 id="backup-title">好好收好这些日子</h2><p>备份包含已保存的日记文字、照片、日期与心情。草稿和关怀反馈不包含在内；备份文件未加密，请自行妥善保管。</p><div class="backup-actions"><button type="button" id="export-journal" class="button primary">导出图文备份</button><button type="button" id="import-journal" class="button outline">选择备份恢复</button></div><input id="backup-input" type="file" accept=".json,application/json" hidden><p id="backup-status" role="status"></p><button type="button" id="confirm-import" class="button primary" hidden>确认导入</button><p class="fine-print">恢复会新增未出现的记录；相同 ID 的记录一律跳过，保留本机版本，不会覆盖现有日记。</p></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

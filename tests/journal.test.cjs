@@ -2,13 +2,29 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const J = require('../journal.js');
 
-test('保存记录必须选择有效心情，限制文字长度并清理重复标签', () => {
+test('图文记录允许不选心情，拒绝空白和超长内容', () => {
   assert.throws(() => J.createEntry({ mood: 0 }));
-  assert.throws(() => J.createEntry({ mood: 6 }));
-  const entry = J.createEntry({ mood: 2, tags: ['工作', '工作', 'unknown'], note: 'x'.repeat(501) });
-  assert.equal(entry.note.length, 500);
+  assert.throws(() => J.createEntry({ mood: 6, note: '文字' }));
+  assert.throws(() => J.createEntry({ title: '只有标题', tags: ['工作'] }));
+  assert.throws(() => J.createEntry({ note: 'x'.repeat(5001) }));
+  assert.throws(() => J.createEntry({ note: '文字', photos: Array(10).fill({}) }));
+  const entry = J.createEntry({ mood: null, tags: ['工作', '工作', 'unknown'], note: 'x'.repeat(5000) });
+  assert.equal(entry.note.length, 5000);
+  assert.equal(entry.mood, null);
   assert.deepEqual(entry.tags, ['工作']);
   assert.ok(entry.id);
+  assert.equal(J.createEntry({ photos: [{ id: 'photo' }] }).photos.length, 1);
+});
+
+test('补记日期稳定且无心情的图文记录不影响均值或低落因素', () => {
+  const now = new Date(2026, 8, 27, 12), date = now.toISOString();
+  const entries = [J.createEntry({ note: '照片日记', mood: null, tags: ['工作'], date }), J.createEntry({ mood: 4, date }), J.createEntry({ mood: 2, date, day: '2026-09-25', tags: ['睡眠'] })];
+  const days = J.weekly(entries, now);
+  assert.equal(days[6].value, 4); assert.equal(days[6].count, 1);
+  assert.equal(days[4].value, 2);
+  assert.deepEqual(J.triggers(entries, now), [{ tag: '睡眠', count: 1 }]);
+  assert.equal(J.sorted(entries).at(-1).day, '2026-09-25');
+  assert.equal(J.validDay('2026-02-30'), false);
 });
 
 test('七天趋势只聚合同一本地日期的记录，不把空白日视作低落', () => {

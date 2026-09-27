@@ -67,6 +67,6 @@ for (const width of [320, 390, 768, 1024, 1487, 1912]) {
   command('click', '.care-dot:nth-child(2)'); command('wait', '430');
   check(evaluate(`document.documentElement.scrollWidth <= innerWidth && (() => {const a=document.querySelector('.care-slide-noise'), b=a.querySelector('.note-footnote');return b.getBoundingClientRect().bottom < a.getBoundingClientRect().bottom - 5})()`), `carousel fits ${width}px and keeps caption inside paper`);
 }
-check(evaluate('Array.from(document.images).every(i=>i.complete && i.naturalWidth > 0)'), 'all illustrations and icons load');
+check(evaluate('Array.from(document.images).filter(i=>i.getAttribute("src")).every(i=>i.complete && i.naturalWidth > 0)'), 'all illustrations and icons load');
 check(command('errors').trim() === '', 'no uncaught browser errors');
 console.log('Care feature acceptance passed.');

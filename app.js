@@ -6,9 +6,9 @@
   const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
   const icon = name => { const img = el('img'); img.src = `assets/icons/${name}.svg`; img.alt = ''; return img; };
   const ENTRY_KEY = 'xinqing.entries.v1', CARE_KEY = 'xinqing.care.v1';
-  let entries = [], careLogs = [], demo = false, demoEntries = J.examples(), demoCare = [], editingId = null, deletingId = null;
+  let entries = [], careLogs = [], demo = false, demoEntries = [...window.AlbumUI.examples(), ...J.examples()], demoCare = [], editingId = null, deletingId = null;
   let selectedMood = 0, currentSuggestion = 'walk', page = 'today', toastTimeout;
-  let rawCorrupt = null;
+  let rawCorrupt = null, album, readyPromise, storageReady = false;
   const drafts = { personal: { mood: 0, tags: [], note: '' }, demo: { mood: 4, tags: ['工作'], note: '' } };
   const activityNames = { breathe: '1分钟呼吸练习', rain: '温柔雨声', noise: '白噪音', walk: '5分钟散步' };
   let activity = null, activityTimer = null;
@@ -72,17 +72,17 @@
     $('#save-entry').replaceChildren(document.createTextNode(editingId ? '保存修改' : '记下这一刻'), Object.assign(icon('arrow-right'), { className: 'icon' }));
     $('#cancel-edit').hidden = !editingId;
   }
-  function saveEntry(event) {
+  async function saveEntry(event) {
     event.preventDefault();
+    if ($('#save-entry').disabled) return;
     let entry;
     try {
       const existing = editingId ? data().find(e => e.id === editingId) : null;
       entry = J.createEntry({ id: existing?.id, date: existing?.date, mood: selectedMood, tags: tagsSelected(), note: $('#journal-note').value });
     } catch (error) { $('#form-error').textContent = error.message; $('#form-error').hidden = false; $('#mood-options input').focus(); return; }
     const wasEditing = Boolean(editingId);
-    const next = editingId ? data().map(e => e.id === editingId ? entry : e) : [...data(), entry];
-    if (!demo && !persist(ENTRY_KEY, next)) return;
-    if (demo) demoEntries = next; else entries = next;
+    $('#save-entry').disabled = true;
+    try { await saveRecord(entry); } catch (error) { warning(`未能保存：${error.message} 输入已保留，请重试。`); return; } finally { $('#save-entry').disabled = false; }
     editingId = null; setForm(); updateSuggestion(J.recommend(entry)); renderData();
     $('#save-success').textContent = demo ? '示例已更新，个人手帐没有改变。' : wasEditing ? '修改已保存。每一种感受，都值得被认真对待。' : '已记下你的感受。现在，给自己留一点时间吧。';
     $('#save-success').hidden = false;
@@ -92,12 +92,31 @@
     currentSuggestion = kind === 'rain' ? 'noise' : kind;
     care.select(currentSuggestion);
   }
-  function changePage(next) {
+  async function refreshRecords() { if (storageReady) entries = await window.JournalStore.list(); renderData(); }
+  async function saveRecord(entry, draftKey) {
+    await readyPromise;
+    if (demo) { demoEntries = data().some(e => e.id === entry.id) ? data().map(e => e.id === entry.id ? entry : e) : [...data(), entry]; }
+    else { if (!storageReady) throw new Error('本机数据库暂不可用'); await window.JournalStore.save(entry, draftKey); entries = await window.JournalStore.list(); }
+    renderData();
+  }
+  async function removeRecord(id) {
+    await readyPromise;
+    if (demo) demoEntries = data().filter(e => e.id !== id);
+    else { if (!storageReady) throw new Error('本机数据库暂不可用'); await window.JournalStore.remove(id); entries = await window.JournalStore.list(); }
+    // The caller navigates away before re-rendering a removed detail.
+  }
+  async function changePage(next) {
+    next = /^(today|review|care|album|write|entry\/[^/]+|edit\/[^/]+)$/.test(next) ? next : 'today';
+    if (album && !await album.beforeLeave(next)) { history.replaceState(null, '', `#${page}`); return; }
     $('#save-success').hidden = true;
-    page = ['today', 'review', 'care'].includes(next) ? next : 'today';
-    $$('.page').forEach(section => { section.hidden = section.id !== `page-${page}`; });
-    $$('.main-nav a').forEach(link => { const active = link.dataset.page === page; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
-    document.title = `${{ today: '今日心情', review: '情绪回顾', care: '自我关怀' }[page]} · 心晴`;
+    page = next;
+    const surface = next === 'write' || next.startsWith('edit/') ? 'editor' : next.startsWith('entry/') ? 'entry' : next;
+    const nav = ['album', 'editor', 'entry'].includes(surface) ? 'review' : surface;
+    document.body.dataset.surface = surface;
+    $$('.page').forEach(section => { section.hidden = section.id !== `page-${surface}`; });
+    $$('.main-nav a').forEach(link => { const active = link.dataset.page === nav; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+    document.title = `${{ today: '今日心情', review: '情绪回顾', care: '自我关怀', album: '我的手帐', editor: '写日记', entry: '日记' }[surface]} · 心晴`;
+    if (album) { try { await readyPromise; await album.route(next); } catch (error) { toast(`页面暂未准备好：${error.message}`); } }
     renderData();
   }
   function goto(next) { if (location.hash === `#${next}`) changePage(next); else location.hash = next; window.scrollTo({ top: 0, behavior: 'instant' }); }
@@ -137,30 +156,13 @@
       const row = el('div', 'trigger-row'), track = el('span', 'trigger-track'), fill = el('span'); fill.style.width = `${count / stats[0].count * 100}%`; track.append(fill); row.append(el('span', '', tag), track, el('span', '', `${count}次`)); container.append(row);
     });
     const keys = new Set(J.weekly([]).map(d => d.key));
-    const low = data().filter(e => e.mood <= 2 && keys.has(J.dayKey(e.date))).length;
+    const low = data().filter(e => e.mood >= 1 && e.mood <= 2 && keys.has(J.entryDay(e))).length;
     $('#trigger-insight').textContent = stats.length ? `最近7天的 ${low} 条低落记录中，有 ${stats[0].count} 条提到了“${stats[0].tag}”。回看这些片刻，或许能发现相似的情境。` : low ? '有些感受还没有找到原因，也没有关系。下次记录时，可以试着选一个影响因素。' : '这里还没有足够的低落记录可供整理。不必为了分析而记录，按自己的节奏就好。';
   }
   function emptyState(title, copy, action) {
     const wrap = el('div', 'empty-state'); wrap.append(icon('notebook'), el('h3', '', title), el('p', '', copy));
     if (action) { const button = el('button', 'button outline', '记下此刻的心情'); button.type = 'button'; button.addEventListener('click', () => goto('today')); wrap.append(button); }
     return wrap;
-  }
-  function renderEntries() {
-    const list = $('#entry-list'); list.replaceChildren();
-    $('#entry-count').textContent = `${data().length} 条${demo ? '示例' : ''}记录`;
-    if (!data().length) { list.append(emptyState('每一页，都可以是新的开始。', '今天发生了什么？从一个表情开始也可以。', true)); return; }
-    [...data()].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(entry => {
-      const row = el('article', 'entry-row'), face = el('span', 'mood-face'); face.style.setProperty('--face-position', `${(entry.mood - 1) * 25}%`); face.setAttribute('aria-hidden', 'true');
-      const content = el('div'), meta = el('div', 'entry-meta'); meta.append(el('strong', '', J.moods[entry.mood - 1]), el('time', '', shortDate(entry.date))); meta.querySelector('time').dateTime = entry.date;
-      content.append(meta, el('p', 'entry-note', entry.note || '这一刻，没有写下文字。'));
-      const tags = el('div', 'entry-tags'); entry.tags.forEach(tag => tags.append(el('span', '', tag))); content.append(tags);
-      const actions = el('div', 'entry-actions');
-      const edit = el('button', 'icon-button'); edit.type = 'button'; edit.setAttribute('aria-label', `编辑${shortDate(entry.date)}的日记`); edit.title = '编辑日记'; edit.append(icon('pencil-simple'));
-      edit.addEventListener('click', () => { editingId = entry.id; goto('today'); setForm(entry); $('#journal-note').focus(); toast('正在编辑这条日记，原记录时间会保留。'); });
-      const del = el('button', 'icon-button'); del.type = 'button'; del.setAttribute('aria-label', `删除${shortDate(entry.date)}的日记`); del.title = '删除日记'; del.append(icon('trash'));
-      del.addEventListener('click', () => { deletingId = entry.id; $('#confirm-dialog').showModal(); });
-      actions.append(edit, del); row.append(face, content, actions); list.append(row);
-    });
   }
   function renderCareHistory() {
     const list = $('#care-history-list'); list.replaceChildren();
@@ -171,7 +173,7 @@
   }
   function renderData() {
     setDate(); $('#home-data-label').textContent = $('#review-data-label').textContent = demo ? '示例数据' : '我的记录';
-    renderEntries(); renderTriggers(); renderCareHistory();
+    renderTriggers(); renderCareHistory(); album?.render();
     requestAnimationFrame(() => { chart($('#home-chart'), $('#home-chart-empty')); chart($('#review-chart'), $('#review-chart-empty')); });
   }
 
@@ -243,7 +245,7 @@
   $('#cancel-edit').addEventListener('click', () => { editingId = null; setForm(); toast('已取消编辑，原记录没有改变。'); });
   $('#demo-toggle').addEventListener('click', toggleDemo); $('#demo-exit').addEventListener('click', toggleDemo);
   $$('[data-goto]').forEach(button => button.addEventListener('click', () => goto(button.dataset.goto)));
-  window.addEventListener('hashchange', () => { if (['today', 'review', 'care'].includes(location.hash.slice(1))) changePage(location.hash.slice(1)); });
+  window.addEventListener('hashchange', () => changePage(location.hash.slice(1)));
   $('.skip-link').addEventListener('click', event => { event.preventDefault(); $('#main').focus(); $('#main').scrollIntoView(); });
   let resizeTimeout; window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(renderData, 100); });
   $$('[data-activity]').forEach(button => button.addEventListener('click', () => openActivity(button.dataset.activity)));
@@ -252,15 +254,20 @@
   $$('[data-feedback]').forEach(button => button.addEventListener('click', () => saveFeedback(button.dataset.feedback)));
   $('#skip-feedback').addEventListener('click', () => saveFeedback('未填写'));
   $('#cancel-delete').addEventListener('click', () => $('#confirm-dialog').close());
-  $('#confirm-delete').addEventListener('click', () => {
-    const next = data().filter(e => e.id !== deletingId);
-    if (!demo && !persist(ENTRY_KEY, next)) return;
-    if (demo) demoEntries = next; else entries = next;
-    if (editingId === deletingId) { editingId = null; setForm(); }
-    deletingId = null; $('#confirm-dialog').close(); renderData(); toast('这条记录已删除。');
-  });
   $('#privacy-button').addEventListener('click', () => $('#privacy-dialog').showModal());
   ['#close-privacy', '#privacy-understood'].forEach(selector => $(selector).addEventListener('click', () => $('#privacy-dialog').close()));
   window.addEventListener('pagehide', cleanupActivity);
+  album = window.AlbumUI.create({ data, isDemo: () => demo, ready: () => readyPromise, save: saveRecord, remove: removeRecord, refresh: refreshRecords, goto, toast });
+  readyPromise = window.JournalStore.init().then(saved => { entries = saved; storageReady = true; renderData(); }).catch(error => { warning(`图文存储暂不可用：${error.message} 旧记录仍可查看，请勿清除浏览器数据。`); });
+  if (window.Capacitor?.isNativePlatform()) {
+    window.Capacitor.registerPlugin('App').addListener('backButton', () => {
+      const dialog = document.querySelector('dialog[open]');
+      if (dialog) { dialog.close(); return; }
+      if (page === 'write' || page.startsWith('edit/')) { $('#editor-cancel').click(); return; }
+      if (page.startsWith('entry/')) { goto('album'); return; }
+      if (page !== 'today') { goto('today'); return; }
+      window.Capacitor.registerPlugin('App').minimizeApp();
+    }).catch(() => {});
+  }
   changePage(location.hash.slice(1));
 })();

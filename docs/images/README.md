@@ -2,7 +2,25 @@
 
 [返回项目首页](../../README.md) · [详细 PRD](../PRD.md)
 
-本目录为心晴当前可交互原型的实际浏览器截图，用于 GitHub README 与 PRD 展示。
+本目录包含 v1.0 历史截图和 v1.1 实际实现截图，用于 README 与 PRD。
+
+## v1.1 照片手帐
+
+采集于 2026-09-27，来源为本轮工作区的实际本地服务；独立 Chromium 会话，390 × 844 / 1440 × 1024 CSS viewport。测试环境使用内置照片构造的虚构记录，无真实用户内容。新图转为 JPEG，未重绘或改变页面内容。
+
+| 图片 | 页面 |
+|---|---|
+| [album-mobile.jpg](album-mobile.jpg) | 手机生活影集 |
+| [album-editor-mobile.jpg](album-editor-mobile.jpg) | 手机独立编辑器 |
+| [album-detail-mobile.jpg](album-detail-mobile.jpg) | 手机只读详情 |
+| [album-desktop.jpg](album-desktop.jpg) | 桌面生活影集 |
+| [album-editor-desktop.jpg](album-editor-desktop.jpg) | 桌面独立编辑器 |
+
+参考概念及并排对照见 [设计档案](../iterations/photo-journal/DESIGN.md)。
+
+## v1.0 历史截图
+
+以下记录为原主线功能基线；旧回顾列表已在 v1.1 调整为独立影集，不能用旧截图描述新导航。
 
 - 来源：[正式在线原型](https://moodjournal-pi.vercel.app/)，功能基线 `c6fc23e`。
 - 采集日期：2026-09-27；浏览器：独立 Chrome 会话，由 agent-browser 操作。

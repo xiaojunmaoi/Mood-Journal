@@ -1,31 +1,40 @@
-# 安卓测试版：APK 安装与构建
+# Android v1.1 测试版：安装与构建
 
-心晴安卓版复用现有 HTML / CSS / JavaScript，通过 Capacitor 打包为 Android App。页面、插画与四种自然声音频随安装包提供，不依赖在线首页启动。
+心晴使用 Capacitor 将同一份网页代码打包为 Android App。页面、插画、示例照片和自然声音频都在 APK 中，启动不需要远程网站。
 
-## 用数据线复制安装
+## 用数据线安装
 
-1. 下载 `xinqing-android-preview.apk` 到电脑。
-2. 用支持传输数据的 USB 线连接手机，解锁手机，在 USB 用途里选择「文件传输」。
-3. 在电脑文件管理器里打开手机，将 APK 复制到手机的 `Download` / 「下载」目录。
-4. 打开手机的「文件管理」，找到 APK 并点击。
-5. 如系统提示，允许当前文件管理应用「安装未知应用」或「安装此来源的应用」，再继续安装。菜单名称因品牌而异。
-6. 安装后桌面出现「心晴」。安装完成后可按需关闭文件管理器的安装权限。
+1. 将 `xinqing-album-v1.1-preview.apk` 下载到电脑。
+2. 用可传输数据的 USB 线连接手机，解锁后选择「文件传输」。
+3. 把 APK 复制到手机 `Download` / 下载目录。
+4. 在手机文件管理器打开 APK，按系统提示允许该来源安装应用。
+5. 安装后打开 **心晴·影集**。复制安装不需要开启 USB 调试。
 
-复制文件后在手机上安装不需要开启 USB 调试。通过 Android Studio / adb 由电脑直接安装调试，才需要相应调试授权。
+本版包名为 `com.xiaojunmaoi.xinqing.album`，版本 `1.1.0-preview`。可与旧版 `com.xiaojunmaoi.xinqing` 并存，避免为签名冲突卸载旧 App；两个应用的数据独立。**不要为了安装测试版删除有重要日记的旧版。**
 
-## 数据与版本范围
+## 本版新增
 
-- 安装包是 `1.0.0-preview` 测试版，应用 ID 为 `com.xiaojunmaoi.xinqing`，最低 Android API 为 24；需要支持当前网页功能的较新系统 WebView。
-- App 的记录与网页版分开保存，不自动读取电脑、手机浏览器或其他设备中的日记。
-- 当前仍沿用 WebView 本地记录方式，尚未接入原生数据库、云同步或日记导入导出。
-- 卸载 App 或清除应用数据会删除本机记录；不要把测试版作为重要日记的唯一备份。
-- 本版使用测试签名，仅用于安装体验。首次云端构建会生成调试签名；不同构建的签名可能不同，后续覆盖安装前必须核对签名，不要为解决安装冲突直接卸载有重要记录的旧版。
-- APK 构建和签名校验不代表已在你的手机上完成真机验收。安装后请检查记录保存、重新打开后的记录、声音播放暂停和页面切换。
-- 暂未承诺锁屏 / 后台持续播放、通知提醒或应用商店发布。
+- 手机影集、独立图文编辑器与只读详情。
+- 最多 9 张照片、5,000 字正文、可选心情、补记日期。
+- 原生文件选择器 / 拍照入口，经设备支持后返回照片给同一编辑器。
+- IndexedDB 本机图文草稿和记录，不使用 base64 localStorage 存图。
+- 备份写入 App 缓存，再通过 Filesystem + Share 打开系统保存/分享窗口；恢复时选择 JSON 文件。
+- App 插件处理 Android 返回键：先关闭弹窗，再退出编辑/详情，根页面最小化。
+
+网页与 App 不会自动互相读取记录。v1.1 之间可以主动导出图文备份、传输 JSON，再导入；旧 v1.0 App 没有图文备份入口，也不会自动把旧包数据搬到这个并存测试包。
+
+## 签名、数据与验证边界
+
+- 本版使用调试签名；未配置固定发布密钥。不同构建的签名可能不同，未来覆盖更新前需要核对，不能保证直接覆盖安装。
+- 最低 API 为 24；需要支持当前网页特性的较新 Android System WebView。仅声明构建最低版本不等于已在所有 Android 7+ 设备上实测。
+- 记录在 WebView 的 IndexedDB 中，关怀反馈在 localStorage；不是原生数据库，也没有云同步或后台上传。
+- 清除应用数据或卸载会丢失本机内容，请先导出重要日记。备份不包含草稿、关怀反馈，最大 100 MB。
+- 浏览器响应式、功能回归、APK 编译和资源/签名校验不能替代真机测试。相机、文件选择、系统分享、返回键、软键盘遮挡和应用重启恢复需在你的手机上确认。
+- 不承诺锁屏持续播放、通知提醒或应用商店发布。
 
 ## 本地构建
 
-需要 Node.js 22+、JDK 21、Android SDK 与 Android Studio。使用与 Capacitor 8 配套的 SDK 和构建工具。
+需要 Node.js 22+、JDK 21、Android SDK 36 / Build Tools 36.0.0。
 
 ```bash
 npm ci
@@ -33,25 +42,22 @@ npm run android:sync
 npm run android:open
 ```
 
-在 Android Studio 中生成 Debug APK，或在 Android 目录运行：
+或在 `android` 目录运行：
 
 ```powershell
-.\gradlew.bat assembleDebug
+.\gradlew.bat assembleAlbumPreview
 ```
 
-默认产物：`android/app/build/outputs/apk/debug/app-debug.apk`。
+输出：`android/app/build/outputs/apk/albumPreview/app-albumPreview.apk`。
 
-`npm run android:sync` 会先生成网页资源，再将 Android 专用的存储提示写入生成文件并复制到原生工程。网页源文件不受影响；构建网站继续使用 `npm run build`。
+`android:sync` 先构建前端、调整 Android 的本地存储提示，再复制到原生工程并同步 App、Filesystem、Share 插件。网页发布继续运行 `npm run build`。
 
-## GitHub 构建
+## GitHub 构建和下载
 
-仓库 Actions 中提供手动触发的 **Android APK** 工作流：
+打开 [Android APK 工作流](https://github.com/xiaojunmaoi/Mood-Journal/actions/workflows/android-apk.yml)，选择 `main` 手动运行。
 
-1. 选择主分支运行工作流。
-2. 工作流执行网页检查与测试、Android 资源同步和 Gradle 编译。
-3. 校验 APK 签名、资源完整性和应用 ID。
-4. 在成功运行的 Artifacts 中下载 `xinqing-android-preview`，解压获得 APK、SHA-256 校验值与包信息。
+工作流执行语法检查、单元测试、前端构建、Capacitor 同步、Gradle 编译，然后验证 APK 签名、包信息、照片与音频资源、三个原生插件。成功产物位于 **xinqing-album-v1.1-preview** artifact，包含 APK、`SHA256SUMS.txt`、签名与包信息。
 
-构建产物保留 30 天；本地下载后的文件不受该保留时间影响。此工作流不自动发布应用商店或 GitHub Release。
+Actions 产物保留 30 天，下载到本地后不受该期限影响。下载 GitHub Actions artifact 通常需要登录 GitHub；网站仍可公开访问。本工作流不自动发布应用商店或 GitHub Release。
 
-参考：[Capacitor 接入文档](https://capacitorjs.com/docs/getting-started) · [Android 文件传输说明](https://support.google.com/android/answer/9064445?hl=zh-Hans)。
+参考：[Capacitor Filesystem](https://capacitorjs.com/docs/apis/filesystem)、[Share](https://capacitorjs.com/docs/apis/share)、[App](https://capacitorjs.com/docs/apis/app)。

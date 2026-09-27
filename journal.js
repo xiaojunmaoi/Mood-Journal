@@ -6,9 +6,22 @@
     const d = new Date(value);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
+  function validDay(day) { if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false; const d = new Date(`${day}T12:00:00`); return Number.isFinite(d.getTime()) && dayKey(d) === day; }
+  function entryDay(entry) { return entry.day || dayKey(entry.date); }
+  function sorted(entries) { return [...entries].sort((a, b) => entryDay(b).localeCompare(entryDay(a)) || b.date.localeCompare(a.date)); }
   function createEntry(input) {
-    if (!Number.isInteger(input.mood) || input.mood < 1 || input.mood > 5) throw new Error('先选一个最接近此刻的心情吧。');
-    return { id: input.id || (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`), mood: input.mood, tags: [...new Set((Array.isArray(input.tags) ? input.tags : []).filter(t => tags.includes(t)))], note: String(input.note || '').trim().slice(0, 500), date: input.date && Number.isFinite(Date.parse(input.date)) ? input.date : new Date().toISOString() };
+    const mood = input.mood === 0 || input.mood == null ? null : input.mood;
+    if (mood !== null && (!Number.isInteger(mood) || mood < 1 || mood > 5)) throw new Error('请选择有效的心情。');
+    const note = String(input.note || '').trim(), title = String(input.title || '').trim();
+    const photos = Array.isArray(input.photos) ? input.photos : [];
+    if (note.length > 5000) throw new Error('日记最多可以写 5,000 字，请稍作整理后保存。');
+    if (title.length > 40) throw new Error('标题最多 40 字。');
+    if (photos.length > 9) throw new Error('每篇日记最多放 9 张照片。');
+    if (!mood && !note && !photos.length) throw new Error('选一个心情、写一句话，或添加一张照片再保存吧。');
+    const date = input.date && Number.isFinite(Date.parse(input.date)) ? input.date : new Date().toISOString();
+    const day = input.day || dayKey(date);
+    if (!validDay(day)) throw new Error('请选择有效的记录日期。');
+    return { id: input.id || (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`), mood, tags: [...new Set((Array.isArray(input.tags) ? input.tags : []).filter(t => tags.includes(t)))], note, title, photos, date, day, updatedAt: input.updatedAt || date };
   }
   function parseEntries(raw) {
     if (!raw) return { entries: [], error: false };
@@ -23,14 +36,14 @@
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + i);
       const key = dayKey(date);
-      const values = entries.filter(e => dayKey(e.date) === key);
+      const values = entries.filter(e => entryDay(e) === key && Number.isInteger(e.mood) && e.mood >= 1 && e.mood <= 5);
       return { key, label: `${date.getMonth() + 1}/${date.getDate()}`, count: values.length, value: values.length ? values.reduce((sum, e) => sum + e.mood, 0) / values.length : null };
     });
   }
   function triggers(entries, now = new Date()) {
     const keys = new Set(weekly([], now).map(d => d.key));
     const counts = {};
-    entries.filter(e => e.mood <= 2 && keys.has(dayKey(e.date))).forEach(e => [...new Set(e.tags)].filter(t => tags.includes(t)).forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
+    entries.filter(e => e.mood >= 1 && e.mood <= 2 && keys.has(entryDay(e))).forEach(e => [...new Set(e.tags)].filter(t => tags.includes(t)).forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
     return Object.entries(counts).map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count);
   }
   function examples(now = new Date()) {
@@ -45,7 +58,7 @@
     if (entry.tags.includes('工作') || entry.tags.includes('学业')) return 'walk';
     return entry.mood <= 2 ? 'breathe' : 'walk';
   }
-  const api = { tags, moods, dayKey, createEntry, parseEntries, weekly, triggers, examples, recommend };
+  const api = { tags, moods, dayKey, validDay, entryDay, sorted, createEntry, parseEntries, weekly, triggers, examples, recommend };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Journal = api;
 })(typeof window !== 'undefined' ? window : globalThis);

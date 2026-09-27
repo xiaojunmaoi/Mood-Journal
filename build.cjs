@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const output = path.join(__dirname, 'dist');
-const files = ['index.html', 'styles.css', 'care.css', 'journal.js', 'app.js', 'care.js', 'nature-audio.js', 'assets/sound-rain.webp', 'assets/sound-ocean.webp', 'assets/sound-forest.webp', 'assets/sound-stream.webp', 'assets/paper.png', 'assets/mood-faces.png', 'assets/daisies-transparent.png', 'assets/walking-transparent.png', 'assets/journals.png'];
+const files = ['index.html', 'styles.css', 'care.css', 'journal.js', 'app.js', 'care.js', 'nature-audio.js', 'album.js', 'album.css', 'journal-store.js', 'assets/sound-rain.webp', 'assets/sound-ocean.webp', 'assets/sound-forest.webp', 'assets/sound-stream.webp', 'assets/paper.png', 'assets/mood-faces.png', 'assets/daisies-transparent.png', 'assets/walking-transparent.png', 'assets/journals.png', 'assets/journal-demo-lake.webp', 'assets/journal-demo-cafe.webp', 'assets/journal-demo-sunset.webp'];
 for (const file of files) {
   const destination = path.join(output, file);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -18,3 +18,5 @@ for (const name of fs.readdirSync(path.join(__dirname, 'assets/audio'))) {
   fs.copyFileSync(path.join(__dirname, 'assets/audio', name), path.join(audioOutput, name));
 }
 console.log('Static HTML prototype built in dist/');
+
+fs.copyFileSync(path.join(__dirname, 'node_modules/@capacitor/core/dist/capacitor.js'), path.join(output, 'assets/capacitor-core.js'));
