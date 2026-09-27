@@ -1,18 +1,28 @@
-# Android v1.1 测试版：安装与构建
+# Android v1.1.1 测试版：安装与构建
 
 心晴使用 Capacitor 将同一份网页代码打包为 Android App。页面、插画、示例照片和自然声音频都在 APK 中，启动不需要远程网站。
 
 ## 用数据线安装
 
-1. 将 `xinqing-album-v1.1-preview.apk` 下载到电脑。
+1. 将 `xinqing-album-v1.1.1-preview.apk` 下载到电脑。
 2. 用可传输数据的 USB 线连接手机，解锁后选择「文件传输」。
 3. 把 APK 复制到手机 `Download` / 下载目录。
 4. 在手机文件管理器打开 APK，按系统提示允许该来源安装应用。
-5. 安装后打开 **心晴·影集**。复制安装不需要开启 USB 调试。
+5. 安装后打开 **心晴·影集 1.1.1**。复制安装不需要开启 USB 调试。
 
-本版包名为 `com.xiaojunmaoi.xinqing.album`，版本 `1.1.0-preview`。可与旧版 `com.xiaojunmaoi.xinqing` 并存，避免为签名冲突卸载旧 App；两个应用的数据独立。**不要为了安装测试版删除有重要日记的旧版。**
+本版包名为 `com.xiaojunmaoi.xinqing.album.v111`，版本 `1.1.1-preview`。可与 v1.1 的 `com.xiaojunmaoi.xinqing.album` 和 v1.0 的 `com.xiaojunmaoi.xinqing` 并存，避免为签名冲突卸载旧 App；两个应用的数据独立。**不要为了安装测试版删除有重要日记的旧版。**
+
+## 从已安装的 v1.1 转移日记
+
+1. 在旧版「心晴·影集」中打开「我的手帐 → 备份与恢复 → 导出图文备份」。通过系统分享保存 JSON 文件。
+2. 安装并打开「心晴·影集 1.1.1」，进入「备份与恢复」，选择刚才的 JSON，核对预览后确认导入。
+3. 确认照片和正文都在后继续使用新版。旧版仍保留原记录，不需要卸载；草稿需先保存为日记，关怀反馈不在图文备份范围内。
+
+本版沿用测试签名，没有旧 APK 的固定签名私钥，因此使用不同包名并存，不承诺覆盖安装。
 
 ## 本版新增
+
+- 修复多篇日记混排：每篇独占一行，多图在同一篇内拼贴，长标题与纯文字记录保持完整归属。
 
 - 手机影集、独立图文编辑器与只读详情。
 - 最多 9 张照片、5,000 字正文、可选心情、补记日期。
@@ -56,7 +66,7 @@ npm run android:open
 
 打开 [Android APK 工作流](https://github.com/xiaojunmaoi/Mood-Journal/actions/workflows/android-apk.yml)，选择 `main` 手动运行。
 
-工作流执行语法检查、单元测试、前端构建、Capacitor 同步、Gradle 编译，然后验证 APK 签名、包信息、照片与音频资源、三个原生插件。成功产物位于 **xinqing-album-v1.1-preview** artifact，包含 APK、`SHA256SUMS.txt`、签名与包信息。
+工作流执行语法检查、单元测试、前端构建、Capacitor 同步、Gradle 编译，然后验证 APK 签名、包信息、照片与音频资源、三个原生插件。成功产物位于 **xinqing-album-v1.1.1-preview** artifact，包含 APK、`SHA256SUMS.txt`、签名与包信息。
 
 Actions 产物保留 30 天，下载到本地后不受该期限影响。下载 GitHub Actions artifact 通常需要登录 GitHub；网站仍可公开访问。本工作流不自动发布应用商店或 GitHub Release。
 

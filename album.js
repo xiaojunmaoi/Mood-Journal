@@ -7,7 +7,7 @@
   const button = (label, cls, click) => { const b = el('button', cls, label); b.type = 'button'; b.addEventListener('click', click); return b; };
   function face(mood) { const span = el('span', 'mood-face'); span.style.setProperty('--face-position', `${(mood - 1) * 25}%`); span.setAttribute('aria-hidden', 'true'); return span; }
   function moodLabel(mood) { const span = el('span', 'mini-mood'); if (mood) span.append(face(mood), document.createTextNode(J.moods[mood - 1])); return span; }
-  const dateLabel = day => new Date(`${day}T12:00:00`).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' });
+  const dateLabel = day => new Date(`${day}T12:00:00`).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' }).replace(/(周|星期)/, ' · $1');
   function examples() {
     const files = ['lake', 'cafe', 'sunset'];
     const titles = ['山水之间，慢下来', '窗边的一杯咖啡', '晚霞替今天收尾'];
@@ -50,11 +50,18 @@
       }
       all.forEach(entry => {
         const link = el('a', `album-card${entry.photos?.length ? '' : ' text-entry'}`); link.href = `#entry/${encodeURIComponent(entry.id)}`;
-        if (entry.photos?.length) { const cover = el('div', 'album-cover'); cover.append(image(entry.photos[0]), el('span', 'photo-badge', `${entry.photos.length}张`)); link.append(cover); }
+        if (entry.photos?.length) {
+          const cover = el('div', 'album-cover');
+          // Preview at most three photos from this diary; keep the complete ordered set in its detail.
+          cover.dataset.previewCount = Math.min(entry.photos.length, 3);
+          cover.append(...entry.photos.slice(0, 3).map(photo => image(photo)), el('span', 'photo-badge', `${entry.photos.length}张`));
+          link.append(cover);
+        }
         const text = el('div', 'album-card-copy'), meta = el('div', 'album-meta'); meta.append(el('time', '', dateLabel(J.entryDay(entry))));
         if (entry.mood) meta.append(moodLabel(entry.mood));
         text.append(meta, el('h2', '', entry.title || (entry.note ? entry.note.split('\n')[0].slice(0, 36) : '留住这一刻')));
         if (entry.note) text.append(el('p', 'album-excerpt', entry.note));
+        const readMore = el('span', 'album-read-more', '阅读日记'); readMore.append(icon('arrow-right')); text.append(readMore);
         link.append(text); grid.append(link);
       });
       gcURLs();

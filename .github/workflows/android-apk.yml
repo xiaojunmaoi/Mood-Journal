@@ -39,15 +39,15 @@ jobs:
       - name: Verify APK signature and packaged resources
         run: |
           mkdir -p apk-output
-          cp android/app/build/outputs/apk/albumPreview/app-albumPreview.apk apk-output/xinqing-album-v1.1-preview.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk-output/xinqing-album-v1.1-preview.apk > apk-output/signature.txt
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk-output/xinqing-album-v1.1-preview.apk > apk-output/package-info.txt
-          python3 scripts/verify-apk.py apk-output/xinqing-album-v1.1-preview.apk
+          cp android/app/build/outputs/apk/albumPreview/app-albumPreview.apk apk-output/xinqing-album-v1.1.1-preview.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk-output/xinqing-album-v1.1.1-preview.apk > apk-output/signature.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk-output/xinqing-album-v1.1.1-preview.apk > apk-output/package-info.txt
+          python3 scripts/verify-apk.py apk-output/xinqing-album-v1.1.1-preview.apk
           cd apk-output
-          sha256sum xinqing-album-v1.1-preview.apk > SHA256SUMS.txt
+          sha256sum xinqing-album-v1.1.1-preview.apk > SHA256SUMS.txt
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: xinqing-album-v1.1-preview
+          name: xinqing-album-v1.1.1-preview
           path: apk-output/
           retention-days: 30
           if-no-files-found: error

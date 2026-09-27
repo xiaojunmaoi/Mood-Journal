@@ -7,8 +7,8 @@ android {
         applicationId "com.xiaojunmaoi.xinqing"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 3
+        versionName "1.1.1"
         manifestPlaceholders = [appLabel: "心晴"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -20,9 +20,9 @@ android {
     buildTypes {
         albumPreview {
             initWith debug
-            applicationIdSuffix ".album"
+            applicationIdSuffix ".album.v111"
             versionNameSuffix "-preview"
-            manifestPlaceholders = [appLabel: "心晴·影集"]
+            manifestPlaceholders = [appLabel: "心晴·影集 1.1.1"]
             matchingFallbacks = ['debug']
         }
         release {
