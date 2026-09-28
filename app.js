@@ -8,11 +8,12 @@
   const ENTRY_KEY = 'xinqing.entries.v1', CARE_KEY = 'xinqing.care.v1';
   let entries = [], careLogs = [], demo = false, demoEntries = [...window.AlbumUI.examples(), ...J.examples()], demoCare = [], editingId = null, deletingId = null;
   let selectedMood = 0, currentSuggestion = 'walk', page = 'today', toastTimeout;
-  let rawCorrupt = null, album, readyPromise, storageReady = false;
+  let rawCorrupt = null, album, readyPromise, storageReady = false, writeReturn = 'album';
   const drafts = { personal: { mood: 0, tags: [], note: '' }, demo: { mood: 4, tags: ['工作'], note: '' } };
   const activityNames = { breathe: '1分钟呼吸练习', rain: '温柔雨声', noise: '白噪音', walk: '5分钟散步' };
   let activity = null, activityTimer = null;
   const care = window.CareUI.create({ openActivity });
+  const trend = window.TrendUI.create({ data, isDemo: () => demo });
 
   function warning(message) { $('#storage-warning').textContent = message; $('#storage-warning').hidden = false; }
   try {
@@ -43,6 +44,8 @@
     $('#date-month').textContent = `${now.getFullYear()}年${now.getMonth() + 1}月`;
     $('#date-weekday').textContent = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
     $('#date-day').textContent = String(now.getDate()).padStart(2, '0');
+    $('#mobile-date').dateTime = J.dayKey(now);
+    $('#mobile-date').textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日  ${$('#date-weekday').textContent}`;
   }
   function tagsSelected() { return $$('#tag-options input:checked').map(input => input.value); }
   function buildForm() {
@@ -106,6 +109,7 @@
     // The caller navigates away before re-rendering a removed detail.
   }
   async function changePage(next) {
+    trend.closeMenus();
     next = /^(today|review|care|album|write|entry\/[^/]+|edit\/[^/]+)$/.test(next) ? next : 'today';
     if (album && !await album.beforeLeave(next)) { history.replaceState(null, '', `#${page}`); return; }
     $('#save-success').hidden = true;
@@ -119,7 +123,7 @@
     if (album) { try { await readyPromise; await album.route(next); } catch (error) { toast(`页面暂未准备好：${error.message}`); } }
     renderData();
   }
-  function goto(next) { if (location.hash === `#${next}`) changePage(next); else location.hash = next; window.scrollTo({ top: 0, behavior: 'instant' }); }
+  function goto(next) { if (next === 'write') writeReturn = page === 'today' ? 'today' : 'album'; if (location.hash === `#${next}`) changePage(next); else location.hash = next; window.scrollTo({ top: 0, behavior: 'instant' }); }
   function toggleDemo() {
     drafts[demo ? 'demo' : 'personal'] = { mood: selectedMood, tags: tagsSelected(), note: $('#journal-note').value, editingId };
     demo = !demo;
@@ -130,34 +134,6 @@
     setForm(drafts[demo ? 'demo' : 'personal']);
     updateSuggestion(J.recommend({ mood: selectedMood || 3, tags: tagsSelected() }));
     renderData(); toast(demo ? '进入示例手帐，不影响个人记录' : '已回到你的手帐');
-  }
-  function chart(canvas, emptyEl) {
-    if (!canvas.clientWidth) return;
-    const days = J.weekly(data()), width = canvas.clientWidth, height = canvas.clientHeight;
-    const hasRecords = days.some(d => d.value !== null);
-    const scale = window.devicePixelRatio || 1; canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
-    const ctx = canvas.getContext('2d'); ctx.scale(scale, scale);
-    const left = width < 380 ? 43 : 51, right = 15, top = 12, bottom = 28;
-    const px = i => left + i * (width - left - right) / 6;
-    const py = value => top + (5 - value) / 4 * (height - top - bottom);
-    ctx.font = `${width < 380 ? 10 : 11}px "Microsoft YaHei", sans-serif`; ctx.textBaseline = 'middle';
-    [1, 3, 5].forEach(value => { const y = py(value); ctx.strokeStyle = hasRecords ? '#ded5c875' : '#ded5c83b'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(width - right, y); ctx.stroke(); ctx.fillStyle = '#998b79'; ctx.textAlign = 'right'; ctx.fillText(J.moods[value - 1], left - 11, y); });
-    days.forEach((day, i) => { const x = px(i); ctx.strokeStyle = hasRecords ? '#e4dbcf66' : '#e4dbcf20'; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, height - bottom); ctx.stroke(); ctx.fillStyle = i === 6 ? '#b9654b' : '#9b8e7c'; ctx.textAlign = 'center'; ctx.fillText(day.label, x, height - 9); });
-    ctx.strokeStyle = '#bd795f'; ctx.lineWidth = 1.4; ctx.lineJoin = 'round'; ctx.beginPath(); let started = false;
-    days.forEach((day, i) => { if (day.value === null) { started = false; return; } if (started) ctx.lineTo(px(i), py(day.value)); else ctx.moveTo(px(i), py(day.value)); started = true; }); ctx.stroke();
-    days.forEach((day, i) => { if (day.value === null) return; ctx.beginPath(); ctx.arc(px(i), py(day.value), 4.4, 0, Math.PI * 2); ctx.fillStyle = '#b96a50'; ctx.fill(); });
-    const summary = days.map(d => `${d.label}：${d.value === null ? '无记录' : `${d.value.toFixed(1)}分，${d.count}条记录`}`).join('；');
-    canvas.setAttribute('aria-label', `最近7天心情自评（1至5分）。${summary}`);
-    emptyEl.hidden = hasRecords;
-  }
-  function renderTriggers() {
-    const stats = J.triggers(data()), container = $('#trigger-bars'); container.replaceChildren();
-    stats.forEach(({ tag, count }) => {
-      const row = el('div', 'trigger-row'), track = el('span', 'trigger-track'), fill = el('span'); fill.style.width = `${count / stats[0].count * 100}%`; track.append(fill); row.append(el('span', '', tag), track, el('span', '', `${count}次`)); container.append(row);
-    });
-    const keys = new Set(J.weekly([]).map(d => d.key));
-    const low = data().filter(e => e.mood >= 1 && e.mood <= 2 && keys.has(J.entryDay(e))).length;
-    $('#trigger-insight').textContent = stats.length ? `最近7天的 ${low} 条低落记录中，有 ${stats[0].count} 条提到了“${stats[0].tag}”。回看这些片刻，或许能发现相似的情境。` : low ? '有些感受还没有找到原因，也没有关系。下次记录时，可以试着选一个影响因素。' : '这里还没有足够的低落记录可供整理。不必为了分析而记录，按自己的节奏就好。';
   }
   function emptyState(title, copy, action) {
     const wrap = el('div', 'empty-state'); wrap.append(icon('notebook'), el('h3', '', title), el('p', '', copy));
@@ -173,8 +149,8 @@
   }
   function renderData() {
     setDate(); $('#home-data-label').textContent = $('#review-data-label').textContent = demo ? '示例数据' : '我的记录';
-    renderTriggers(); renderCareHistory(); album?.render();
-    requestAnimationFrame(() => { chart($('#home-chart'), $('#home-chart-empty')); chart($('#review-chart'), $('#review-chart-empty')); });
+    renderCareHistory(); album?.render();
+    trend.render();
   }
 
   function cleanupActivity() {
@@ -257,12 +233,14 @@
   $('#privacy-button').addEventListener('click', () => $('#privacy-dialog').showModal());
   ['#close-privacy', '#privacy-understood'].forEach(selector => $(selector).addEventListener('click', () => $('#privacy-dialog').close()));
   window.addEventListener('pagehide', cleanupActivity);
-  album = window.AlbumUI.create({ data, isDemo: () => demo, ready: () => readyPromise, save: saveRecord, remove: removeRecord, refresh: refreshRecords, goto, toast });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderData(); });
+  album = window.AlbumUI.create({ data, isDemo: () => demo, ready: () => readyPromise, save: saveRecord, remove: removeRecord, refresh: refreshRecords, goto, toast, backFromNew: () => goto(writeReturn) });
   readyPromise = window.JournalStore.init().then(saved => { entries = saved; storageReady = true; renderData(); }).catch(error => { warning(`图文存储暂不可用：${error.message} 旧记录仍可查看，请勿清除浏览器数据。`); });
   if (window.Capacitor?.isNativePlatform()) {
     window.Capacitor.registerPlugin('App').addListener('backButton', () => {
       const dialog = document.querySelector('dialog[open]');
       if (dialog) { dialog.close(); return; }
+      if (trend.closeMenus()) return;
       if (page === 'write' || page.startsWith('edit/')) { $('#editor-cancel').click(); return; }
       if (page.startsWith('entry/')) { goto('album'); return; }
       if (page !== 'today') { goto('today'); return; }

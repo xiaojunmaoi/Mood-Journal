@@ -1,12 +1,12 @@
 {
   "name": "xinqing-mood-journal",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "description": "A warm paper mood journal and self-care HTML prototype",
   "scripts": {
     "dev": "node serve.cjs",
     "test": "node --test tests/*.test.cjs",
-    "check": "node --check app.js && node --check journal.js && node --check care.js && node --check nature-audio.js && node --check album.js && node --check journal-store.js",
+    "check": "node --check app.js && node --check trend.js && node --check journal.js && node --check care.js && node --check nature-audio.js && node --check album.js && node --check journal-store.js",
     "build": "node build.cjs",
     "android:sync": "node build-android.cjs && cap sync android",
     "android:open": "cap open android"

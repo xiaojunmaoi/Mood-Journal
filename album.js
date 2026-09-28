@@ -215,7 +215,7 @@
     function render() { if (active === 'album') renderAlbum(); else if (active.startsWith('entry/')) renderDetail(); }
     ['editor-title', 'editor-body', 'editor-date'].forEach(id => $(`#${id}`).addEventListener('input', changed));
     $('#album-form').addEventListener('submit', saveEditor);
-    $('#editor-cancel').addEventListener('click', () => api.goto(editor?.editingId ? `entry/${encodeURIComponent(editor.editingId)}` : 'album'));
+    $('#editor-cancel').addEventListener('click', () => editor?.editingId ? api.goto(`entry/${encodeURIComponent(editor.editingId)}`) : api.backFromNew());
     $('#discard-draft').addEventListener('click', async () => {
       if (processing || saving || !window.confirm('丢弃这份未提交的草稿？已保存的日记不会改变。')) return;
       try { clearTimeout(draftTimer); await draftChain.catch(() => {}); const key = draftKey(); if (api.isDemo()) demoDrafts.delete(key); else await Store.deleteDraft(key); dirty = false; const id = editor.editingId; editor = null; api.goto(id ? `entry/${encodeURIComponent(id)}` : 'album'); } catch { showError('草稿未能删除，请重试。'); }

@@ -32,33 +32,69 @@
       return { entries: valid.map(createEntry), error: valid.length !== data.length };
     } catch { return { entries: [], error: true }; }
   }
+  function shiftDay(day, offset) {
+    const date = new Date(`${day}T12:00:00`);
+    date.setDate(date.getDate() + offset);
+    return dayKey(date);
+  }
+  function dayNumber(day) { return Date.parse(`${day}T00:00:00Z`) / 86400000; }
+  function dateRange(selection = { preset: '7' }, now = new Date()) {
+    const today = dayKey(now), preset = String(selection?.preset);
+    if (preset === '7' || preset === '30') {
+      return { preset, start: shiftDay(today, 1 - Number(preset)), end: today, length: Number(preset) };
+    }
+    if (preset !== 'custom' || !validDay(selection.start) || !validDay(selection.end)) throw new Error('请选择有效的开始和结束日期。');
+    if (selection.start > selection.end) throw new Error('开始日期不能晚于结束日期。');
+    if (selection.end > today) throw new Error('结束日期不能晚于今天。');
+    return { preset, start: selection.start, end: selection.end, length: dayNumber(selection.end) - dayNumber(selection.start) + 1 };
+  }
+  function rangeStats(entries, range) {
+    const grouped = new Map(), counts = {};
+    let lowCount = 0, totalCount = 0;
+    for (const entry of entries) {
+      if (!Number.isInteger(entry.mood) || entry.mood < 1 || entry.mood > 5) continue;
+      const key = entryDay(entry);
+      if (!validDay(key) || key < range.start || key > range.end) continue;
+      const day = grouped.get(key) || { key, count: 0, sum: 0 };
+      day.count++; day.sum += entry.mood; grouped.set(key, day); totalCount++;
+      if (entry.mood <= 2) {
+        lowCount++;
+        for (const tag of new Set(entry.tags || [])) if (tags.includes(tag)) counts[tag] = (counts[tag] || 0) + 1;
+      }
+    }
+    // Keep only observed days: even a multi-year range need not allocate every empty date.
+    const days = [...grouped.values()].sort((a, b) => a.key.localeCompare(b.key)).map(d => ({ key: d.key, label: `${Number(d.key.slice(5, 7))}/${Number(d.key.slice(8))}`, count: d.count, value: d.sum / d.count }));
+    const triggers = Object.entries(counts).map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count);
+    return { days, triggers, lowCount, totalCount };
+  }
   function weekly(entries, now = new Date()) {
+    const range = dateRange({ preset: '7' }, now), days = new Map(rangeStats(entries, range).days.map(d => [d.key, d]));
     return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + i);
-      const key = dayKey(date);
-      const values = entries.filter(e => entryDay(e) === key && Number.isInteger(e.mood) && e.mood >= 1 && e.mood <= 5);
-      return { key, label: `${date.getMonth() + 1}/${date.getDate()}`, count: values.length, value: values.length ? values.reduce((sum, e) => sum + e.mood, 0) / values.length : null };
+      const key = shiftDay(range.start, i);
+      return days.get(key) || { key, label: `${Number(key.slice(5, 7))}/${Number(key.slice(8))}`, count: 0, value: null };
     });
   }
-  function triggers(entries, now = new Date()) {
-    const keys = new Set(weekly([], now).map(d => d.key));
-    const counts = {};
-    entries.filter(e => e.mood >= 1 && e.mood <= 2 && keys.has(entryDay(e))).forEach(e => [...new Set(e.tags)].filter(t => tags.includes(t)).forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
-    return Object.entries(counts).map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count);
-  }
+  function triggers(entries, now = new Date()) { return rangeStats(entries, dateRange({ preset: '7' }, now)).triggers; }
   function examples(now = new Date()) {
     const notes = ['事情有一点多，先把今天最重要的一件做好。', '午后和朋友聊了聊天，轻松了一些。', '昨晚睡得晚，今天想早点休息。', '计划没能全部完成，允许自己慢一点。', '午休出去散步，看到了路边的小花。', '把拖了很久的事情做完了，松了一口气。', '今天的阳光很好，给自己留了一点时间。'];
-    return [2, 3, 2, 2, 3, 3, 4].map((mood, i) => {
+    const recent = [2, 3, 2, 2, 3, 3, 4].map((mood, i) => {
       const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + i, i === 6 ? 0 : 18);
       return { id: `example-${i}`, date: date.toISOString(), mood, tags: i === 2 ? ['睡眠'] : i === 1 ? ['人际'] : ['工作'], note: notes[i] };
     });
+    const earlier = [];
+    for (let offset = 7; offset < 30; offset++) {
+      if ([10, 17, 24].includes(offset)) continue;
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset, 18);
+      earlier.push({ id: `example-history-${offset}`, date: date.toISOString(), mood: [3, 4, 4, 2, 3, 2, 4][offset % 7], tags: [offset % 3 === 0 ? '睡眠' : '工作'], note: notes[offset % notes.length] });
+    }
+    return [...earlier, ...recent];
   }
   function recommend(entry) {
     if (entry.tags.includes('睡眠')) return 'rain';
     if (entry.tags.includes('工作') || entry.tags.includes('学业')) return 'walk';
     return entry.mood <= 2 ? 'breathe' : 'walk';
   }
-  const api = { tags, moods, dayKey, validDay, entryDay, sorted, createEntry, parseEntries, weekly, triggers, examples, recommend };
+  const api = { tags, moods, dayKey, validDay, entryDay, sorted, createEntry, parseEntries, weekly, triggers, shiftDay, dayNumber, dateRange, rangeStats, examples, recommend };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Journal = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -6,7 +6,7 @@ const option = (name, fallback) => args.includes(name) ? args[args.indexOf(name)
 const port = Number(option('--port', 4173));
 const host = option('--host', '127.0.0.1');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.m4a': 'audio/mp4' };
-const allowed = new Set(['index.html', 'styles.css', 'care.css', 'app.js', 'journal.js', 'care.js', 'nature-audio.js', 'album.js', 'album.css', 'journal-store.js']);
+const allowed = new Set(['index.html', 'styles.css', 'trend.css', 'trend.js', 'care.css', 'app.js', 'journal.js', 'care.js', 'nature-audio.js', 'album.js', 'album.css', 'journal-store.js']);
 http.createServer((req, res) => {
   let relative;
   try { relative = decodeURIComponent(new URL(req.url, 'http://localhost').pathname).replace(/^\/+/, '') || 'index.html'; } catch { res.writeHead(400).end(); return; }

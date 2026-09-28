@@ -6,7 +6,7 @@ import zipfile
 
 with zipfile.ZipFile(sys.argv[1]) as apk:
     required = ["AndroidManifest.xml", "classes.dex", "assets/public/index.html",
-                "assets/public/app.js", "assets/public/care.js", "assets/public/journal.js",
+                "assets/public/app.js", "assets/public/trend.js", "assets/public/trend.css", "assets/public/assets/journal-entry.png", "assets/public/assets/icons/calendar-blank.svg", "assets/public/care.js", "assets/public/journal.js",
                 "assets/public/nature-audio.js", "assets/public/care.css",
                 "assets/public/album.js", "assets/public/album.css", "assets/public/journal-store.js",
                 "assets/public/assets/capacitor-core.js"]
@@ -27,6 +27,6 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
     info_path = Path(sys.argv[1]).with_name("package-info.txt")
     if info_path.exists():
         info = info_path.read_text(encoding="utf-8")
-        assert "name='com.xiaojunmaoi.xinqing.album.v111'" in info, "Unexpected package ID"
-        assert "versionName='1.1.1-preview'" in info, "Unexpected version"
+        assert "name='com.xiaojunmaoi.xinqing.album.v120'" in info, "Unexpected package ID"
+        assert "versionName='1.2.0-preview'" in info, "Unexpected version"
     print("APK verified: photo journal, three native plugins, photos, four sounds, local start URL.")

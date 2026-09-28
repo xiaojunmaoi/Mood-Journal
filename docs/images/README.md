@@ -2,7 +2,21 @@
 
 [返回项目首页](../../README.md) · [详细 PRD](../PRD.md)
 
-本目录包含 v1.0 历史截图和 v1.1 实际实现截图，用于 README 与 PRD。
+本目录包含 v1.0 / v1.1 历史截图和 v1.2 实际实现截图，用于 README 与 PRD。
+
+## v1.2 首页与时间回顾
+
+采集于 2026-09-28，本地实际 Chromium 页面、独立示例手帐。使用 1440 × 1184 桌面首页、1440 × 1024 回顾页和 390 × 1010 手机 CSS viewport，density 1。日期选择为近 30 天；数据为内置虚构示例，缺失日真实留空。手机图来自响应式浏览器，不是安卓真机拍摄。
+
+| 文件 | 内容与处理 |
+|---|---|
+| [home-v1.2-desktop.jpg](home-v1.2-desktop.jpg) | 实际首页完整页面，含绿色入口、表单、便签及趋势 |
+| [home-v1.2-mobile.jpg](home-v1.2-mobile.jpg) | 同一手机页面从顶部到趋势后，按内容裁切；不是一屏可见承诺 |
+| [trend-menu-mobile.jpg](trend-menu-mobile.jpg) | 时间选项展开的实际视口 |
+| [trend-date-mobile.jpg](trend-date-mobile.jpg) | 自定义日期底部面板，背景为当前首页 |
+| [trend-review-desktop.jpg](trend-review-desktop.jpg) | 实际回顾页，同范围曲线与因素 |
+
+PNG 原始截图转为 JPEG，未重绘、改写或拼接页面内容。选定概念另存于 [设计档案](../iterations/home-trend/DESIGN.md)，不会冒充实现截图。
 
 ## v1.1.1 影集布局修复
 

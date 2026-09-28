@@ -10,12 +10,14 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="care.css">
   <link rel="stylesheet" href="album.css">
+  <link rel="stylesheet" href="trend.css">
   <script src="assets/capacitor-core.js" defer></script>
   <script src="journal.js" defer></script>
   <script src="journal-store.js" defer></script>
   <script src="album.js" defer></script>
   <script src="nature-audio.js" defer></script>
   <script src="care.js" defer></script>
+  <script src="trend.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -31,11 +33,12 @@
     <button id="demo-toggle" class="text-button demo-toggle"><img src="assets/icons/leaf.svg" alt="" class="icon"> <span>查看示例</span><img src="assets/icons/caret-right.svg" alt="" class="icon small"></button>
   </header>
 
-  <div id="demo-banner" class="notice demo-banner" hidden>正在浏览示例手帐，所有内容均为演示数据，不会改动你的个人记录。<button id="demo-exit" class="text-button">回到我的手帐</button></div>
+  <div id="demo-banner" class="notice demo-banner" hidden>示例手帐 · 不影响个人记录<button id="demo-exit" class="text-button">回到我的手帐</button></div>
   <div id="storage-warning" class="notice warning" role="alert" hidden></div>
 
   <div class="app-layout">
     <aside class="date-rail" aria-label="今天的日期">
+      <time id="mobile-date" class="mobile-date"></time>
       <div class="date-block"><p id="date-month">2026年9月</p><p id="date-weekday">周二</p><strong id="date-day">22</strong></div>
       <div class="rail-rule"></div>
       <p class="rail-mantra handwritten">慢慢来，<br>也没关系。</p>
@@ -48,6 +51,11 @@
         <div class="today-layout">
           <div class="journal-column">
             <div class="page-heading"><h1 id="today-title"><span>把今天的心情，</span><wbr><span>轻轻放在这里。</span></h1><p>不必完美，只需真实。这里会温柔地接住你的每一种情绪。</p></div>
+            <button type="button" class="journal-entry" id="photo-journal-entry" data-goto="write">
+              <img class="journal-entry-art" src="assets/journal-entry.png" alt="" width="128" height="92">
+              <span class="journal-entry-copy"><strong>写图文日记</strong><span>把照片和故事，一起收进手帐</span></span>
+              <span class="journal-entry-arrow"><img src="assets/icons/arrow-right.svg" alt=""></span>
+            </button>
             <form id="mood-form">
               <fieldset class="mood-field"><legend>今天的心情是？</legend><div class="mood-options" id="mood-options"></div></fieldset>
               <fieldset class="tag-field"><legend>今天，什么影响了你？<span class="optional">选填 · 可多选</span></legend><div id="tag-options" class="tag-options"></div></fieldset>
@@ -55,11 +63,17 @@
               <div class="note-input"><textarea id="journal-note" maxlength="500" placeholder="刚刚发生了什么？简单写一句也可以。" rows="3"></textarea><span id="note-count">0 / 500</span></div>
               <p id="form-error" class="form-error" role="alert" hidden></p>
               <div class="form-actions"><button type="submit" id="save-entry" class="button primary">记下这一刻 <img src="assets/icons/arrow-right.svg" alt="" class="icon"></button><button type="button" id="cancel-edit" class="text-button" hidden>取消编辑</button></div>
-              <button type="button" class="text-button photo-entry-link" data-goto="write"><img src="assets/icons/notebook.svg" class="icon small" alt="">用照片和长日记，留住生活 <img src="assets/icons/arrow-right.svg" class="icon small" alt=""></button>
               <p class="privacy-note"><img src="assets/icons/lock-key.svg" alt="" class="icon small">记录仅保存在当前浏览器。</p>
               <p id="save-success" class="save-success" role="status" hidden></p>
             </form>
-            <section class="home-trend" aria-labelledby="home-trend-title"><div class="section-heading"><h2 id="home-trend-title">最近7天</h2><p>这些起伏，都是认真生活的痕迹。</p><span class="data-label" id="home-data-label">我的记录</span></div><div class="chart-wrap"><canvas id="home-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="home-chart-empty">你的手帐，从今天这一笔开始。<span>记录后，这里会慢慢画出你的心情轨迹。</span></p></div><button class="text-button chart-link" type="button" data-goto="album">翻看我的手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button></section>
+            <section class="home-trend" aria-labelledby="home-trend-title" data-trend="home">
+              <div class="trend-heading"><h2 id="home-trend-title">心情轨迹</h2><details class="trend-filter"><summary aria-label="选择心情轨迹时间范围"><img src="assets/icons/calendar-blank.svg" class="icon small" alt=""><span class="range-name">近7天</span><img src="assets/icons/caret-right.svg" class="range-caret" alt=""></summary><div class="range-options" aria-label="时间范围"><button type="button" data-range="7" aria-pressed="true">近7天<img src="assets/icons/check.svg" alt=""></button><button type="button" data-range="30" aria-pressed="false">近30天<img src="assets/icons/check.svg" alt=""></button><button type="button" data-range="custom" aria-pressed="false">自定义日期<img src="assets/icons/check.svg" alt=""></button></div></details></div>
+              <div class="trend-meta"><p class="range-dates" aria-live="polite"></p><span class="data-label" id="home-data-label">我的记录</span></div>
+              <div class="chart-wrap"><canvas id="home-chart" role="img" tabindex="0" aria-label="心情轨迹，左右方向键查看每日记录" aria-describedby="home-chart-hint"></canvas><div class="chart-empty" id="home-chart-empty"><p>这段时间还没有心情记录</p><span>不必补齐过去，从此刻开始就好。</span><button class="text-button change-range" type="button">换个时间</button></div><div class="chart-tooltip" hidden></div></div>
+              <p class="trend-footnote" id="home-chart-hint">同日多条取平均，未记录的日期留空。<span class="sr-only">点击或轻触图表查看当天；聚焦后用左右方向键查看有记录的日期。</span></p>
+              <p class="chart-announcement sr-only" role="status" aria-live="polite"></p>
+              <button class="text-button chart-link" type="button" data-goto="album">翻看手帐 <img src="assets/icons/arrow-right.svg" alt="" class="icon small"></button>
+            </section>
           </div>
           <aside class="care-margin" aria-label="今日自我关怀建议">
             <section id="care-carousel" class="care-carousel" role="region" aria-roledescription="轮播" aria-label="三种自我关怀便签" tabindex="0">
@@ -75,7 +89,14 @@
       <section id="page-review" class="page" aria-labelledby="review-title" hidden>
         <nav class="review-tabs" aria-label="回顾方式"><a href="#review" aria-current="page">情绪趋势</a><a href="#album">我的手帐</a></nav>
         <div class="page-heading"><span class="eyebrow">翻一翻，属于你的日子</span><h1 id="review-title">原来，我也走过了这么多。</h1><p>看见情绪的变化，也看见一直在努力的自己。</p></div>
-        <div class="review-summary"><section class="review-trend"><div class="section-heading"><h2>最近7天的心情</h2><span class="data-label" id="review-data-label">我的记录</span></div><div class="chart-wrap large"><canvas id="review-chart" role="img" aria-label="最近七天情绪变化"></canvas><p class="chart-empty" id="review-chart-empty">还没有这7天的记录<span>不必补齐过去，从此刻开始就好。</span></p></div><p class="muted small-text">同一天有多条记录时展示平均值；空白的日子不作推测。</p></section><section class="trigger-panel"><h2>情绪背后的小线索</h2><p class="muted small-text">最近7天，低落时常出现的影响因素</p><div id="trigger-bars"></div><p id="trigger-insight" class="insight"></p><p class="fine-print">这些只是记录中的关联，不代表因果或心理诊断。</p></section></div>
+        <div class="review-summary"><section class="review-trend" aria-labelledby="review-trend-title" data-trend="review">
+              <div class="trend-heading"><h2 id="review-trend-title">心情轨迹</h2><details class="trend-filter"><summary aria-label="选择心情轨迹时间范围"><img src="assets/icons/calendar-blank.svg" class="icon small" alt=""><span class="range-name">近7天</span><img src="assets/icons/caret-right.svg" class="range-caret" alt=""></summary><div class="range-options" aria-label="时间范围"><button type="button" data-range="7" aria-pressed="true">近7天<img src="assets/icons/check.svg" alt=""></button><button type="button" data-range="30" aria-pressed="false">近30天<img src="assets/icons/check.svg" alt=""></button><button type="button" data-range="custom" aria-pressed="false">自定义日期<img src="assets/icons/check.svg" alt=""></button></div></details></div>
+              <div class="trend-meta"><p class="range-dates" aria-live="polite"></p><span class="data-label" id="review-data-label">我的记录</span></div>
+              <div class="chart-wrap large"><canvas id="review-chart" role="img" tabindex="0" aria-label="心情轨迹，左右方向键查看每日记录" aria-describedby="review-chart-hint"></canvas><div class="chart-empty" id="review-chart-empty"><p>这段时间还没有心情记录</p><span>不必补齐过去，从此刻开始就好。</span><button class="text-button change-range" type="button">换个时间</button></div><div class="chart-tooltip" hidden></div></div>
+              <p class="trend-footnote" id="review-chart-hint">同日多条取平均，未记录的日期留空。<span class="sr-only">点击或轻触图表查看当天；聚焦后用左右方向键查看有记录的日期。</span></p>
+              <p class="chart-announcement sr-only" role="status" aria-live="polite"></p>
+
+            </section><section class="trigger-panel"><h2>情绪背后的小线索</h2><p class="muted small-text" id="trigger-range-caption">所选时间内，低落时常出现的影响因素</p><div id="trigger-bars"></div><p id="trigger-insight" class="insight"></p><p class="fine-print">这些只是记录中的关联，不代表因果或心理诊断。</p></section></div>
         <div class="review-album-link"><p>照片、文字与心情，都收在你的手帐里。</p><a href="#album" class="button outline">翻看我的手帐 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></a></div>
       </section>
 
@@ -125,6 +146,17 @@
     </main>
   </div>
 
+  <dialog id="range-dialog" class="range-dialog" aria-labelledby="range-dialog-title">
+    <form id="range-form" novalidate>
+      <button type="button" class="icon-button dialog-close" id="range-close" aria-label="关闭日期选择"><img src="assets/icons/x.svg" alt=""></button>
+      <p class="eyebrow">慢慢翻看，属于你的日子</p><h2 id="range-dialog-title">选择日期范围</h2>
+      <p class="range-description">选择想回看的开始与结束日期。</p>
+      <div class="range-fields"><label for="range-start">开始日期<input id="range-start" type="date" required></label><label for="range-end">结束日期<input id="range-end" type="date" required></label></div>
+      <p class="range-help">包含开始和结束当天，结束日期不晚于今天。</p>
+      <p id="range-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button type="button" id="range-cancel" class="button outline">取消</button><button type="submit" class="button primary">应用范围</button></div>
+    </form>
+  </dialog>
   <dialog id="activity-dialog" aria-labelledby="activity-title"><button id="close-activity" class="icon-button dialog-close" aria-label="关闭练习"><img src="assets/icons/x.svg" alt=""></button><p class="eyebrow" id="activity-eyebrow">给自己一点时间</p><h2 id="activity-title">1分钟呼吸练习</h2><p id="activity-description" class="muted"></p><div id="activity-content"></div><div id="activity-controls" class="activity-controls"></div><div id="activity-feedback" hidden><h3>现在感觉怎么样？</h3><p class="muted small-text">任何感受都可以，没有标准答案。</p><div class="feedback-buttons"><button class="button outline" data-feedback="好一点了">好一点了</button><button class="button outline" data-feedback="差不多">差不多</button><button class="button outline" data-feedback="更难受了">更难受了</button></div><button id="skip-feedback" class="text-button">先不记录感受</button></div><p id="activity-note" class="fine-print">感到不适时，请停下来，恢复自然呼吸。</p></dialog>
   <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">删除这条记录？</h2><p>这条记录删除后无法恢复，其他记录不受影响。</p><div class="dialog-actions"><button id="cancel-delete" class="button outline">保留记录</button><button id="confirm-delete" class="button primary">确认删除</button></div></dialog>
   <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-title"><button class="icon-button dialog-close" id="close-privacy" aria-label="关闭隐私说明"><img src="assets/icons/x.svg" alt=""></button><h2 id="privacy-title">只属于你的手帐</h2><p>日记和照片保存在当前浏览器的本机数据库，关怀反馈保存在本机，不上传到服务器。不同设备、浏览器或网址之间不会自动同步。</p><p>清理浏览器数据或使用无痕模式，可能导致记录丢失。请通过「我的手帐 → 备份与恢复」导出图文日记。关怀练习反馈暂不包含在图文备份中。</p><p>示例手帐与个人记录分开；情绪小结采用统计，关怀建议采用简单规则，没有将你的日记发送给 AI。</p><button class="button primary" id="privacy-understood">知道了</button></dialog>

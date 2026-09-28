@@ -1,0 +1,54 @@
+const {execFileSync}=require('node:child_process');
+const assert=require('node:assert/strict');
+const bin=process.env.AGENT_BROWSER_BIN;
+if(!bin)throw new Error('Set AGENT_BROWSER_BIN');
+const session=process.env.BROWSER_SESSION||`xinqing-trend-${Date.now()}`;
+const base=process.env.TEST_URL||'http://127.0.0.1:4176';
+const run=(...args)=>execFileSync(bin,['--session',session,...args],{encoding:'utf8',timeout:45000});
+const ev=code=>JSON.parse(execFileSync(bin,['--session',session,'eval','--stdin'],{input:code,encoding:'utf8',timeout:45000}).trim());
+const wait=expression=>assert.ok(ev(`new Promise(resolve=>{const started=Date.now();const tick=async()=>{try{if(await(${expression})){resolve(true);return}}catch{}if(Date.now()-started>12000)resolve(false);else setTimeout(tick,60)};tick()})`),`Timeout: ${expression}`);
+const check=(ok,label)=>{assert.ok(ok,label);console.log('PASS '+label)};
+const click=selector=>{ev(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center'});true`);run('click',selector)};
+// The CLI's text typing cannot populate native date inputs; set their ISO value and dispatch input/change, then use real submit/cancel controls.
+const date=(selector,value)=>ev(`(()=>{const input=document.querySelector(${JSON.stringify(selector)});input.value=${JSON.stringify(value)};input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));return input.value})()`);
+const choose=(root,preset)=>{click(`${root} .trend-filter summary`);wait(`document.querySelector('${root} .trend-filter').open`);click(`${root} [data-range="${preset}"]`)};
+// Only fixtures in this isolated automation session are changed, never a user's browser profile.
+run('open',base);wait('typeof JournalStore!=="undefined" && JournalStore.list().then(()=>true)');
+ev(`(async()=>{for(const e of await JournalStore.list())await JournalStore.remove(e.id);localStorage.setItem('xinqing.trend-range.v1','{broken');const today=Journal.dayKey(new Date());for(const [i,offset,mood,tag] of [[0,0,4,'工作'],[1,0,2,'睡眠'],[2,-6,5,'睡眠'],[3,-20,1,'学业'],[4,-29,2,'家庭'],[5,-30,1,'人际'],[6,-10,null,'工作']])await JournalStore.save(Journal.createEntry({id:'trend-'+i,day:Journal.shiftDay(today,offset),mood,tags:[tag],note:'虚构测试记录'}));return true})()`);
+run('reload');wait('document.querySelector("#home-chart").getAttribute("aria-label").includes("3条心情记录")');
+check(ev('document.querySelector("#page-today .range-name").textContent==="近7天"'),'invalid preference falls back to seven days');
+choose('#page-today','30');wait('document.querySelector("#home-chart").getAttribute("aria-label").includes("5条心情记录")');
+check(ev('!document.querySelector("#page-today .trend-filter").open'),'choosing a preset closes its menu');
+click('.main-nav [data-page=review]');wait('document.querySelector("#review-chart").getAttribute("aria-label").includes("5条心情记录")');
+check(ev('document.querySelector("#page-review .range-name").textContent==="近30天" && document.querySelector("#trigger-insight").textContent.includes("3 条低落记录") && document.querySelectorAll(".trigger-row").length===3'),'review curve and factors share selected range');
+choose('#page-review','custom');wait('document.querySelector("#range-dialog").open');
+date('#range-start','2026-09-28');date('#range-end','2026-09-27');click('#range-form [type=submit]');
+check(ev('!document.querySelector("#range-error").hidden && document.querySelector("#range-dialog").open'),'reversed dates show error without applying');click('#range-cancel');
+check(ev('document.querySelector("#page-review .range-name").textContent==="近30天"'),'cancel preserves previously applied range');
+const today=ev('Journal.dayKey(new Date())'),future=ev('Journal.shiftDay(Journal.dayKey(new Date()),1)');
+choose('#page-review','custom');date('#range-start',today);date('#range-end',future);click('#range-form [type=submit]');check(ev('document.querySelector("#range-error").textContent.includes("不晚") || document.querySelector("#range-error").textContent.includes("不能晚")'),'future end date rejected');
+date('#range-end',today);click('#range-form [type=submit]');wait('!document.querySelector("#range-dialog").open');
+check(ev('document.querySelector("#review-chart").getAttribute("aria-label").includes("2条心情记录") && document.querySelector("#review-chart").getAttribute("aria-label").includes("3.0分")'),'single-day range includes both records and daily mean');
+run('reload');wait('document.querySelector("#page-review .range-name").textContent==="自定义"');
+check(ev('document.querySelector("#review-chart").getAttribute("aria-label").includes("2条心情记录")'),'custom range survives reload');
+const emptyDay=ev('Journal.shiftDay(Journal.dayKey(new Date()),-100)');
+choose('#page-review','custom');date('#range-start',emptyDay);date('#range-end',emptyDay);click('#range-form [type=submit]');wait('!document.querySelector("#review-chart-empty").hidden');
+check(ev('document.querySelectorAll(".trigger-row").length===0 && document.querySelector("#trigger-insight").textContent.includes("没有")'),'empty range has no invented curve or stale factors');
+click('#page-review .change-range');wait('document.querySelector("#page-review .trend-filter").open');run('press','Escape');check(ev('!document.querySelector("#page-review .trend-filter").open'),'Escape closes time menu');
+choose('#page-review','custom');date('#range-start','1900-01-01');date('#range-end',today);click('#range-form [type=submit]');wait('document.querySelector("#review-chart").getAttribute("aria-label").includes("6条心情记录")');
+check(ev('document.querySelector("#review-chart").width>0'),'multi-year range remains responsive with sparse daily records');
+click('.main-nav [data-page=today]');wait('!document.querySelector("#page-today").hidden');choose('#page-today','30');
+click('#home-chart');check(ev('!document.querySelector("#page-today .chart-tooltip").hidden'),'click/tap reveals day information without hover');
+ev('document.querySelector("#home-chart").focus();true');run('press','Home');check(ev('document.querySelector("#page-today .chart-announcement").textContent.includes("2.0")'),'keyboard selects first recorded date');run('press','End');check(ev('document.querySelector("#page-today .chart-announcement").textContent.includes("3.0")'),'keyboard reaches latest daily mean');
+click('#mood-options .mood-choice:nth-child(2)');run('fill','#journal-note','尚未提交的心情，返回后继续写。');click('#photo-journal-entry');wait('location.hash==="#write" && document.querySelector("#editor-heading").textContent.includes("新建")');click('#editor-cancel');wait('location.hash==="#today"');
+check(ev('document.querySelector("#journal-note").value.includes("尚未提交") && document.querySelector("#mood-options input:checked").value==="2"'),'photo editor cancel returns home and retains mood and unsaved text');
+for(const width of [320,390,430,640,768,960,1024,1440,1912]){
+ run('set','viewport',String(width),'1000');
+ wait('document.querySelector("#home-chart").width===Math.round(document.querySelector("#home-chart").clientWidth*devicePixelRatio)');
+ check(ev(`(()=>{const e=document.querySelector('#photo-journal-entry').getBoundingClientRect(),f=document.querySelector('#mood-form').getBoundingClientRect(),s=document.querySelector('#page-today .trend-filter summary').getBoundingClientRect();return document.documentElement.scrollWidth<=innerWidth&&e.bottom<f.top&&e.height>=48&&s.height>=44&&document.querySelectorAll('#page-today [data-goto=write]').length===1})()`),`one entry before uninterrupted form, no overflow at ${width}px`);
+ choose('#page-today','custom');wait('document.querySelector("#range-dialog").open');
+ check(ev(`(()=>{const d=document.querySelector('#range-dialog').getBoundingClientRect();return d.left>=-1&&d.right<=innerWidth+1&&d.top>=-1&&d.bottom<=innerHeight+1&&[...document.querySelectorAll('.range-fields input,#range-dialog .dialog-actions button')].every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.left>=d.left&&r.right<=d.right&&r.height>=48})})()`),`date dialog and touch controls fit at ${width}px`);
+ click('#range-cancel');
+}
+check(!run('errors').trim(),'no browser runtime errors');
+console.log('Mood range and entry browser regression passed.');
