@@ -9,13 +9,16 @@
     "check": "node --check app.js && node --check trend.js && node --check journal.js && node --check care.js && node --check nature-audio.js && node --check album.js && node --check journal-store.js",
     "build": "node build.cjs",
     "android:sync": "node build-android.cjs && cap sync android",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "ios:sync": "node build-native.cjs && cap sync ios",
+    "ios:open": "cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",
     "@capacitor/app": "8.1.1",
     "@capacitor/core": "8.5.2",
     "@capacitor/filesystem": "8.1.3",
+    "@capacitor/ios": "8.5.2",
     "@capacitor/share": "8.0.2"
   },
   "devDependencies": {

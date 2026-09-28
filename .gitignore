@@ -32,3 +32,11 @@ android/local.properties
 *.aab
 *.jks
 *.keystore
+
+# iOS build products and private signing material
+*.ipa
+*.xcarchive/
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile

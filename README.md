@@ -2,11 +2,13 @@
 
 一本从一个表情、一句话、一张照片开始的数字手帐。记录日常感受，收藏生活与旅行片刻，回看情绪变化，再给自己一点休息时间。
 
-**在线体验**：[moodjournal-pi.vercel.app](https://moodjournal-pi.vercel.app/) · **安卓安装**：[APK 安装与构建](docs/ANDROID.md)
+**在线体验**：[moodjournal-pi.vercel.app](https://moodjournal-pi.vercel.app/) · **安卓安装**：[APK 安装与构建](docs/ANDROID.md) · **iOS 工程**：[未签名 IPA 与签名说明](docs/IOS.md)
 
 **产品文档**：[完整 PRD](docs/PRD.md) · [照片手帐 PRD](docs/PHOTO-JOURNAL.md) · [v1.2 首页与时间筛选 PRD](docs/TIME-RANGE.md) · [视觉与交互验收](design-qa.md)
 
 > 当前版本 v1.2.0：图文日记、情绪统计与自然声可实际使用。无需注册，记录保存在当前浏览器或 App；支持手动备份和恢复，不会自动跨设备同步。情绪分析采用统计，关怀建议采用简单规则，未接入大模型。
+
+iOS 已同步同版功能与 Xcode 工程，可通过工作流生成 **未签名 IPA**；需要苹果签名后才能安装。它不等同于可直接安装的 Android APK。安装条件、验证范围和日记迁移见 [iOS 文档](docs/IOS.md)。
 
 ## v1.2.0：更容易开始，也能回看更久
 
@@ -100,7 +102,7 @@ flowchart LR
 
 ## 技术与目录
 
-HTML、CSS、原生 JavaScript；Canvas 绘制趋势，HTML Audio 播放本地自然声，Capacitor 打包 Android。运行时不依赖在线模型服务。
+HTML、CSS、原生 JavaScript；Canvas 绘制趋势，HTML Audio 播放本地自然声，Capacitor 打包 Android / iOS。运行时不依赖在线模型服务。
 
 ```text
 index.html                 页面与弹窗
@@ -112,8 +114,11 @@ trend.css / trend.js       首页图文入口、时间选择、曲线点位与�
 app.js                     页面路由、心情表单、关怀反馈
 care.js / nature-audio.js   便签与自然声播放
 android/                   Capacitor 安卓工程
+ios/                       Xcode 工程与 Swift 插件配置
+build-native.cjs           两个原生平台共用的本地页面构建
 assets/                    本地图片、音频、图标与许可
 scripts/verify-apk.py       APK 内置资源与插件校验
+scripts/verify-ipa.py       IPA 真机架构、版本、隐私与全部网页资源校验
 tests/                     核心逻辑和浏览器回归
 docs/                      PRD、实际截图、设计与安装说明
 ```
@@ -142,6 +147,6 @@ npm run android:sync
 
 ## 部署与素材
 
-GitHub `main` 分支联动原 Vercel 项目，构建 `node build.cjs`，发布 `dist/`，沿用 [固定公开域名](https://moodjournal-pi.vercel.app/)。Android 工作流手动生成 APK，操作见 [安装与构建文档](docs/ANDROID.md)。
+GitHub `main` 分支联动原 Vercel 项目，构建 `node build.cjs`，发布 `dist/`，沿用 [固定公开域名](https://moodjournal-pi.vercel.app/)。Android 工作流手动生成 APK，操作见 [安装与构建文档](docs/ANDROID.md)。iOS 另有手动 macOS 构建流程，生成明确标注的未签名 IPA 和模拟器启动截图，见 [iOS 文档](docs/IOS.md)。
 
 纸纹、水彩插画和演示照片由 Image Gen 生成；照片均为虚构素材。图标来自 [Phosphor Icons](https://github.com/phosphor-icons/core)，Capacitor 桥接代码使用 MIT 许可。详见 [素材说明](assets/CREDITS.md)、[图标许可](assets/icons/LICENSE)、[Capacitor 许可](assets/CAPACITOR-LICENSE) 和 [声音来源](assets/audio/CREDITS.html)。

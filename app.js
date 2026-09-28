@@ -236,7 +236,7 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderData(); });
   album = window.AlbumUI.create({ data, isDemo: () => demo, ready: () => readyPromise, save: saveRecord, remove: removeRecord, refresh: refreshRecords, goto, toast, backFromNew: () => goto(writeReturn) });
   readyPromise = window.JournalStore.init().then(saved => { entries = saved; storageReady = true; renderData(); }).catch(error => { warning(`图文存储暂不可用：${error.message} 旧记录仍可查看，请勿清除浏览器数据。`); });
-  if (window.Capacitor?.isNativePlatform()) {
+  if (window.Capacitor?.getPlatform() === 'android') {
     window.Capacitor.registerPlugin('App').addListener('backButton', () => {
       const dialog = document.querySelector('dialog[open]');
       if (dialog) { dialog.close(); return; }

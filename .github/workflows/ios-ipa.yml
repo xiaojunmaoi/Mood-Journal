@@ -1,0 +1,62 @@
+name: iOS unsigned IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15-arm64
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Verify source and sync iOS
+        run: |
+          xcodebuild -version
+          npm ci
+          npm run check
+          npm test
+          npm run ios:sync
+          plutil -lint ios/App/App/Info.plist ios/App/App/PrivacyInfo.xcprivacy
+      - name: Compile iPhone device application without signing
+        run: |
+          set -o pipefail
+          mkdir -p output/ios-logs output/ios-ipa
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ios-device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build | tee output/ios-logs/device-build.log
+      - name: Package and verify unsigned IPA
+        run: |
+          mkdir -p build/ios-payload/Payload
+          ditto build/ios-device/Build/Products/Release-iphoneos/App.app build/ios-payload/Payload/App.app
+          ditto -c -k --keepParent build/ios-payload/Payload output/ios-ipa/xinqing-v1.2.0-unsigned.ipa
+          python3 scripts/verify-ipa.py output/ios-ipa/xinqing-v1.2.0-unsigned.ipa
+          cp docs/IOS.md output/ios-ipa/README-需要签名.md
+          printf 'source_commit=%s\nsigning=unsigned\ninstallable_without_signing=false\n' "$GITHUB_SHA" > output/ios-ipa/build-info.txt
+          cd output/ios-ipa
+          shasum -a 256 xinqing-v1.2.0-unsigned.ipa > SHA256SUMS.txt
+      - name: Compile simulator application
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios-simulator ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee output/ios-logs/simulator-build.log
+      - name: Launch in iPhone simulator and capture screen
+        run: python3 scripts/smoke-ios-simulator.py
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: xinqing-ios-v1.2.0-unsigned
+          path: output/ios-ipa/
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: ios-build-logs
+          path: output/ios-logs/
+          retention-days: 14
