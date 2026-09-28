@@ -2,7 +2,7 @@
 
 [返回 README](../README.md) · [iOS 构建工作流](https://github.com/xiaojunmaoi/Mood-Journal/actions/workflows/ios-ipa.yml) · [当前网页](https://moodjournal-pi.vercel.app/)
 
-本版复用网页与 Android v1.2.0 的同一份界面：明显的图文日记入口、近 7 天 / 近 30 天 / 自定义心情轨迹、照片手帐、备份恢复与四种自然声。iOS 配置为 `com.xiaojunmaoi.xinqing`，版本 `1.2.0`，build `4`，最低 iOS 15。
+本版复用网页与 Android v1.2.0 的同一份界面：明显的图文日记入口、近 7 天 / 近 30 天 / 自定义心情轨迹、照片手帐、备份恢复与四种自然声。iOS 配置为 `com.xiaojunmaoi.xinqing`，版本 `1.2.0`，build `4`，最低 iOS 16。最低版本按本项目的原生弹层、动态视口与不可交互区域等页面特性设置，不仅取 Capacitor 的运行时最低要求。
 
 ## 下载文件与安装边界
 

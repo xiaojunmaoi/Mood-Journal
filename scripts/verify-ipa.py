@@ -14,6 +14,7 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
     assert info['CFBundleIdentifier'] == 'com.xiaojunmaoi.xinqing'
     assert info['CFBundleShortVersionString'] == '1.2.0'
     assert info['CFBundleVersion'] == '4'
+    assert info['MinimumOSVersion'] == '16.0'
     assert 'iPhoneOS' in info['CFBundleSupportedPlatforms'], 'Simulator app cannot be installed on iPhone'
     binary = ipa.read(base + info['CFBundleExecutable'])
     magic, cpu, subtype, filetype, commands = struct.unpack_from('<IIIII', binary)
