@@ -8,6 +8,7 @@
   let db, opening;
   const validAssets = ['lime', 'orange', 'tea'];
   const text = (value, max) => String(value ?? '').trim().slice(0, max);
+  const tagList = value => [...new Set(String(value ?? '').split(/[,，、·]/).map(t => t.trim()).filter(Boolean))];
   function record(input) {
     if (!input || typeof input !== 'object') throw new Error('酒单内容无法读取。');
     const name = text(input.name, 60);
@@ -21,6 +22,7 @@
       alcohol: ['yes', 'no', 'unknown'].includes(input.alcohol) ? input.alcohol : 'unknown',
       photo: input.photo?.blob instanceof Blob ? input.photo : null,
       illustration: validAssets.includes(input.illustration) ? input.illustration : 'tea',
+      photoFit: input.photoFit === 'crop' ? 'crop' : 'contain',
       crop: { x: bounded(crop.x, 50, 0, 100), y: bounded(crop.y, 50, 0, 100), zoom: bounded(crop.zoom, 1, 1, 3) },
       createdAt: Number.isFinite(Date.parse(input.createdAt)) ? input.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -102,5 +104,5 @@
       for (const item of records) { const req = store.get(item.id); req.onsuccess = () => { if (req.result) skipped++; else { store.add(item); added++; } }; }
     }).then(() => ({ added, skipped }));
   }
-  return { record, cropStyle, init, list, save, remove, getDraft, setDraft, clearDraft, exportData, readBackup, importRecords };
+  return { record, cropStyle, tagList, init, list, save, remove, getDraft, setDraft, clearDraft, exportData, readBackup, importRecords };
 });

@@ -1,5 +1,5 @@
 const test = require('node:test'), assert = require('node:assert/strict');
-const { record, cropStyle } = require('../drink-store.js');
+const { record, cropStyle, tagList } = require('../drink-store.js');
 test('酒单拒绝空白名称，保留用户文本并约束类型和裁剪', () => {
   assert.throws(()=>record({name:'  '}),/名字/);
   const d=record({name:'青柠',kind:'recommendation',alcohol:'no',crop:{x:-50,y:999,zoom:20},note:'<script>hello</script>'});
@@ -13,4 +13,10 @@ test('裁剪在横竖图和缩放下覆盖画框，不拉伸或越界留白', ()
     }
   }
   assert.equal(cropStyle({width:2000,height:1000}).left,-25);
+});
+test('旧记录默认完整显示，只有显式裁剪才启用裁剪模式', () => {
+  assert.equal(record({name:'旧照片',crop:{zoom:2}}).photoFit,'contain');
+  assert.equal(record({name:'手动裁剪',photoFit:'crop'}).photoFit,'crop');
+  assert.equal(record({name:'恢复完整',photoFit:'contain',crop:{zoom:2}}).photoFit,'contain');
+  assert.deepEqual(tagList('清爽、木质香,清爽，酸甜·茶香'),['清爽','木质香','酸甜','茶香']);
 });

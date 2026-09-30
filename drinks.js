@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const Store = window.DrinkStore, $ = selector => document.querySelector(selector);
+  const tasteOptions = ['清爽', '酸甜', '微甜', '微苦', '果香', '柑橘', '花香', '茶香', '草本', '醇厚', '辛香', '气泡'];
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
   const icon = name => { const n = el('img', 'icon'); n.src = 'assets/icons/' + name + '.svg'; n.alt = ''; return n; };
   const button = (text, cls, action) => { const n = el('button', cls, text); n.type = 'button'; n.addEventListener('click', action); return n; };
@@ -15,7 +16,7 @@
   function create(api) {
     let personal = [], demoRecords = examples(), active = '', mode = api.isDemo(), filter = 'all', currentId, editor = null, editingId = null;
     let readyError = '', routeVersion = 0, dirty = false, revision = 0, draftTimer, draftChain = Promise.resolve(), processing = false, saving = false, cropDraft, drag, pendingImport;
-    let listScroll = 0, restoreScroll = false;
+    let listScroll = 0, restoreScroll = false, selectedTastes = [], editorTastes = [];
     const urls = new Map(), demoDrafts = new Map();
     const ready = Store.init().then(async () => { personal = await Store.list(); }).catch(error => { readyError = error.message; });
     const data = () => api.isDemo() ? demoRecords : personal;
@@ -30,16 +31,19 @@
       const blobs = new Set([...personal, ...demoRecords, ...(editor ? [editor] : [])].map(d => d.photo?.blob).filter(Boolean));
       for (const [blob, url] of urls) if (!blobs.has(blob)) { URL.revokeObjectURL(url); urls.delete(blob); }
     }
-    function cover(value, cls = '', crop = value.crop) {
-      const wrapper = el('div', 'drink-cover' + (cls ? ' ' + cls : ''));
+    function cover(value, cls = '', crop = value.crop, forceCrop = false) {
+      const cropped = forceCrop || value.photoFit === 'crop';
+      const wrapper = el('div', 'drink-cover' + (cls ? ' ' + cls : '') + (cropped ? ' is-cropped' : ' is-contained'));
       const img = el('img'); img.src = photoURL(value); img.alt = value.name || '饮品封面'; img.loading = 'lazy'; img.decoding = 'async';
-      const rect = Store.cropStyle(value.photo, crop);
-      for (const name of ['width', 'height', 'left', 'top']) img.style[name] = rect[name] + '%';
+      if (cropped) {
+        const rect = Store.cropStyle(value.photo, crop);
+        for (const name of ['width', 'height', 'left', 'top']) img.style[name] = rect[name] + '%';
+      }
       wrapper.append(img); return wrapper;
     }
     function tags(value) {
       const n = el('div', 'drink-tags');
-      value.tags.split(/[,，、·]/).map(x => x.trim()).filter(Boolean).slice(0, 4).forEach(t => n.append(el('span', '', t)));
+      Store.tagList(value.tags).forEach(t => n.append(el('span', '', t)));
       if (value.alcohol !== 'unknown') n.append(el('span', 'drink-alcohol', value.alcohol === 'no' ? '无酒精' : '含酒精'));
       return n;
     }
@@ -61,7 +65,6 @@
         const action = el('span', 'drink-cta', value.kind === 'recipe' ? '查看配方' : '查看推荐'); action.append(icon('arrow-right')); card.append(action);
         card.addEventListener('click', () => { listScroll = window.scrollY; }); grid.append(card);
       }
-      $('#drinks-privacy').textContent = api.isDemo() ? '示例仅用于体验，上传的照片也不会公开。' : '酒单与照片仅保存在本机，可通过备份文件迁移。';
       gc();
     }
     function renderDetail() {
@@ -81,8 +84,21 @@
     }
     function readEditor() {
       if (!editor) return;
-      for (const name of ['name', 'tags', 'ingredients', 'steps', 'note', 'alcohol']) editor[name] = $('#drink-' + name).value;
+      for (const name of ['name', 'ingredients', 'steps', 'note', 'alcohol']) editor[name] = $('#drink-' + name).value;
+      editor.tags = selectedTastes.join('、');
       editor.kind = document.querySelector('[name=drink-kind]:checked').value;
+    }
+    function paintTastes() {
+      const group = $('#drink-tastes'); group.replaceChildren();
+      for (const taste of editorTastes) {
+        const choice = button(taste, 'drink-taste-choice', () => {
+          const next = selectedTastes.includes(taste) ? selectedTastes.filter(t => t !== taste) : [...selectedTastes, taste];
+          if (next.join('、').length > 100) { api.toast('口味标签有些多了，先取消几个再选择。'); return; }
+          selectedTastes = next; paintTastes(); changed();
+          [...group.children].find(b => b.dataset.taste === taste)?.focus({ preventScroll: true });
+        });
+        choice.dataset.taste = taste; choice.setAttribute('aria-pressed', String(selectedTastes.includes(taste))); group.append(choice);
+      }
     }
     function setType() {
       const kind = document.querySelector('[name=drink-kind]:checked').value;
@@ -93,7 +109,7 @@
       if (!editor) return;
       readEditor(); dirty = true; revision++; clearTimeout(draftTimer);
       $('#drink-editor-error').hidden = true; $('#drink-discard').hidden = false;
-      $('#drink-draft-status').textContent = api.isDemo() ? '示例草稿 · 不影响个人记录' : '正在保存草稿…';
+      $('#drink-draft-status').textContent = api.isDemo() ? '示例草稿' : '正在保存草稿…';
       if (!processing) draftTimer = setTimeout(() => flushDraft().catch(() => {}), 500);
     }
     async function flushDraft() {
@@ -103,13 +119,16 @@
       const snapshot = structuredClone(editor), version = revision, draftKey = key(), demo = api.isDemo();
       draftChain = draftChain.catch(() => {}).then(async () => {
         if (demo) demoDrafts.set(draftKey, snapshot); else await Store.setDraft(draftKey, snapshot);
-        if (revision === version) { dirty = false; $('#drink-draft-status').textContent = demo ? '示例草稿 · 仅本次体验保留' : '草稿已保存到本机'; }
+        if (revision === version) { dirty = false; $('#drink-draft-status').textContent = demo ? '示例草稿' : '草稿已保存'; }
       }).catch(error => { $('#drink-draft-status').textContent = '草稿保存失败，请保留页面并重试。'; throw error; });
       return draftChain;
     }
     function paintCover() {
-      const next = cover(editor); $('#drink-cover-preview').replaceChildren(...next.children);
-      $('#drink-cover-state').textContent = (editor.photo ? '已选择照片' : '默认插画') + ' · 封面按 4:3 展示';
+      const next = cover(editor); $('#drink-cover-preview').className = next.className; $('#drink-cover-preview').replaceChildren(...next.children);
+      $('#drink-cover-state').textContent = editor.photo ? '已选择照片' : '默认插画';
+      $('#drink-fit-full').setAttribute('aria-pressed', String(editor.photoFit !== 'crop'));
+      $('#drink-crop').setAttribute('aria-pressed', String(editor.photoFit === 'crop'));
+      $('#drink-fit-full').disabled = processing;
       $('#drink-crop').disabled = processing || !editor.photo;
       ['drink-upload', 'drink-camera', 'drink-default'].forEach(id => { $('#' + id).disabled = processing; });
     }
@@ -122,11 +141,12 @@
       catch { /* A visible warning is retained until a successful save. */ }
       if (token !== routeVersion) return;
       editor = structuredClone(draft || value || { name: '', kind: 'recipe', tags: '', ingredients: '', steps: '', note: '', alcohol: 'unknown', photo: null, illustration: 'tea', crop: { x: 50, y: 50, zoom: 1 } });
-      for (const field of ['name', 'tags', 'ingredients', 'steps', 'note', 'alcohol']) $('#drink-' + field).value = editor[field];
+      for (const field of ['name', 'ingredients', 'steps', 'note', 'alcohol']) $('#drink-' + field).value = editor[field];
+      selectedTastes = Store.tagList(editor.tags); editorTastes = [...new Set([...tasteOptions, ...selectedTastes])]; paintTastes();
       document.querySelector('[name=drink-kind][value=' + editor.kind + ']').checked = true;
       dirty = false; revision++; setType(); paintCover();
       $('#drink-editor-title').textContent = id ? '编辑这一杯的味道' : '收录一杯喜欢的味道';
-      $('#drink-draft-status').textContent = readyError || (draft ? '已恢复本机草稿' : api.isDemo() ? '示例体验 · 不影响个人酒单' : '仅保存在本机，照片不会公开');
+      $('#drink-draft-status').textContent = readyError || (draft ? (api.isDemo() ? '示例草稿' : '已恢复草稿') : '');
       $('#drink-editor-error').hidden = true; $('#drink-discard').hidden = !draft;
       $('#drink-save').disabled = Boolean(readyError && !api.isDemo()); $('#drink-save').textContent = '保存到酒单';
       gc();
@@ -136,7 +156,7 @@
       if (!file || !editor || processing || saving) return;
       processing = true; clearTimeout(draftTimer); paintCover(); $('#drink-save').disabled = true;
       $('#drink-photo-progress').hidden = false; $('#drink-photo-progress').textContent = '正在整理照片，可以继续填写内容…';
-      try { const photo = await PhotoTools.normalize(file); editor.photo = photo; editor.crop = { x: 50, y: 50, zoom: 1 }; changed(); }
+      try { const photo = await PhotoTools.normalize(file); editor.photo = photo; editor.photoFit = 'contain'; editor.crop = { x: 50, y: 50, zoom: 1 }; changed(); }
       catch (e) { error(e.message + ' 原封面已保留。'); }
       finally { processing = false; paintCover(); $('#drink-save').disabled = false; $('#drink-photo-progress').hidden = true; gc(); if (dirty) flushDraft().catch(() => {}); }
     }
@@ -154,7 +174,7 @@
       finally { saving = false; $('#drink-save').disabled = false; $('#drink-save').textContent = '保存到酒单'; }
     }
     function paintCrop() {
-      const next = cover(editor, '', cropDraft); $('#drink-crop-stage').replaceChildren(...next.children);
+      const next = cover(editor, '', cropDraft, true); $('#drink-crop-stage').className = next.className; $('#drink-crop-stage').replaceChildren(...next.children);
       for (const name of ['x', 'y', 'zoom']) $('#drink-crop-' + name).value = cropDraft[name];
     }
     function beginCrop() { if (!editor?.photo || processing) return; cropDraft = { ...editor.crop }; paintCrop(); $('#drink-crop-dialog').showModal(); }
@@ -184,11 +204,12 @@
     $('#drink-upload').addEventListener('click', () => $('#drink-photo-input').click());
     $('#drink-camera').addEventListener('click', () => $('#drink-camera-input').click());
     ['drink-photo-input', 'drink-camera-input'].forEach(id => $('#' + id).addEventListener('change', event => { const file = event.target.files[0]; event.target.value = ''; upload(file); }));
-    $('#drink-default').addEventListener('click', () => { if (processing) return; editor.photo = null; editor.illustration = 'tea'; editor.crop = { x: 50, y: 50, zoom: 1 }; changed(); paintCover(); gc(); });
+    $('#drink-default').addEventListener('click', () => { if (processing) return; editor.photo = null; editor.photoFit = 'contain'; editor.illustration = 'tea'; editor.crop = { x: 50, y: 50, zoom: 1 }; changed(); paintCover(); gc(); });
     $('#drink-crop').addEventListener('click', beginCrop);
+    $('#drink-fit-full').addEventListener('click', () => { if (processing || !editor) return; editor.photoFit = 'contain'; changed(); paintCover(); });
     for (const name of ['x', 'y', 'zoom']) $('#drink-crop-' + name).addEventListener('input', event => { cropDraft[name] = Number(event.target.value); paintCrop(); });
     $('#drink-crop-reset').addEventListener('click', () => { cropDraft = { x: 50, y: 50, zoom: 1 }; paintCrop(); });
-    $('#drink-crop-apply').addEventListener('click', () => { editor.crop = { ...cropDraft }; changed(); paintCover(); $('#drink-crop-dialog').close(); });
+    $('#drink-crop-apply').addEventListener('click', () => { editor.crop = { ...cropDraft }; editor.photoFit = 'crop'; changed(); paintCover(); $('#drink-crop-dialog').close(); });
     const stage = $('#drink-crop-stage');
     stage.addEventListener('pointerdown', event => { drag = { x: event.clientX, y: event.clientY, crop: { ...cropDraft } }; stage.setPointerCapture(event.pointerId); });
     stage.addEventListener('pointermove', event => {

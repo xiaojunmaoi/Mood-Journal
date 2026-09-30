@@ -35,28 +35,30 @@ jobs:
         run: |
           mkdir -p build/ios-payload/Payload
           ditto build/ios-device/Build/Products/Release-iphoneos/App.app build/ios-payload/Payload/App.app
-          ditto -c -k --keepParent build/ios-payload/Payload output/ios-ipa/xinqing-v1.3.0-unsigned.ipa
-          python3 scripts/verify-ipa.py output/ios-ipa/xinqing-v1.3.0-unsigned.ipa
+          ditto -c -k --keepParent build/ios-payload/Payload output/ios-ipa/xinqing-v1.3.1-unsigned.ipa
+          python3 scripts/verify-ipa.py output/ios-ipa/xinqing-v1.3.1-unsigned.ipa
           cp docs/IOS.md output/ios-ipa/README-需要签名.md
           printf 'source_commit=%s\nsigning=unsigned\ninstallable_without_signing=false\n' "$GITHUB_SHA" > output/ios-ipa/build-info.txt
           cd output/ios-ipa
-          shasum -a 256 xinqing-v1.3.0-unsigned.ipa > SHA256SUMS.txt
+          shasum -a 256 xinqing-v1.3.1-unsigned.ipa > SHA256SUMS.txt
       - name: Compile simulator application
         run: |
           set -o pipefail
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios-simulator ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee output/ios-logs/simulator-build.log
       - name: Launch in iPhone simulator and capture screen
         run: python3 scripts/smoke-ios-simulator.py
+      - name: Organize versioned installer
+        run: python3 scripts/archive-installers.py --version 1.3.1 --ios-dir output/ios-ipa --root installer-output --source-sha "$GITHUB_SHA"
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: xinqing-ios-v1.3.0-unsigned
-          path: output/ios-ipa/
+          name: xinqing-ios-v1.3.1-unsigned
+          path: installer-output/
           retention-days: 30
           compression-level: 0
           if-no-files-found: error
       - uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
-          name: ios-build-logs
+          name: ios-build-logs-v1.3.1
           path: output/ios-logs/
           retention-days: 14

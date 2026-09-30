@@ -17,7 +17,7 @@ check(ev('document.querySelectorAll("#page-care .activity-card").length===3 && !
 run('click','[data-activity=noise]'); wait('document.querySelector("#activity-dialog").open'); check(ev('document.querySelectorAll("#activity-dialog .sound-choice").length===4 || document.querySelector("#activity-dialog").textContent.includes("溪流")'), 'existing white noise selector opens'); run('click','#close-activity');
 route('#drinks'); wait('document.querySelector(".drinks-empty")!==null');
 run('click','a[href="#drink-write"]'); wait('document.body.dataset.surface==="drink-editor" && document.querySelector("#drink-name").value===""');
-run('fill','#drink-name','我的青柠收藏'); run('fill','#drink-tags','清爽、柑橘'); run('fill','#drink-note','<script>window.bad=1</script>自己的口味笔记'); run('select','#drink-alcohol','yes');
+run('fill','#drink-name','我的青柠收藏'); run('click','[data-taste=清爽]'); run('click','[data-taste=柑橘]'); run('fill','#drink-note','<script>window.bad=1</script>自己的口味笔记'); run('select','#drink-alcohol','yes');
 run('upload','#drink-photo-input',path.resolve('assets/drink-lime.webp')); wait('document.querySelector("#drink-photo-progress").hidden && document.querySelector("#drink-draft-status").textContent.includes("已保存")');
 check(ev('!document.querySelector("#drink-crop").disabled'), 'uploaded photo enables cover crop');
 run('click','#drink-crop'); wait('document.querySelector("#drink-crop-dialog").open');

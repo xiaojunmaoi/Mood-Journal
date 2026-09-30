@@ -6,9 +6,19 @@
 
 **产品文档**：[完整 PRD](docs/PRD.md) · [照片手帐 PRD](docs/PHOTO-JOURNAL.md) · [v1.2 首页与时间筛选 PRD](docs/TIME-RANGE.md) · [v1.3 解忧杂货店 PRD](docs/SHOP.md) · [视觉与交互验收](design-qa.md)
 
-> 当前版本 v1.3.0：图文日记、情绪统计、自然声与个人酒单可实际使用。无需注册，记录保存在当前浏览器或 App；支持手动备份和恢复，不会自动跨设备同步。情绪分析采用统计，关怀建议采用简单规则，未接入大模型。
+> 当前版本 v1.3.1：图文日记、情绪统计、自然声与个人酒单可实际使用。无需注册，记录保存在当前浏览器或 App；支持手动备份和恢复，不会自动跨设备同步。情绪分析采用统计，关怀建议采用简单规则，未接入大模型。
 
 iOS 已同步同版功能与 Xcode 工程，可通过工作流生成 **未签名 IPA**；需要苹果签名后才能安装。它不等同于可直接安装的 Android APK。安装条件、验证范围和日记迁移见 [iOS 文档](docs/IOS.md)。
+
+## v1.3.1：看见完整照片，轻松选择口味
+
+上传照片在列表、详情和编辑器里默认完整显示；原有照片无需重传。需要局部构图时可选择「裁剪封面」，也可随时切回「完整显示」。口味改为可多选的标签，保留旧记录的自定义口味，并去掉酒单底部和上传区域重复的小字。
+
+| 手机完整照片 | 口味多选 |
+|---|---|
+| <img src="docs/images/shop-v131-catalog-mobile.jpg" width="300" alt="竖版测试照片完整显示，上下边缘均保留"> | <img src="docs/images/shop-v131-tastes-mobile.jpg" width="300" alt="口味多选标签与保存操作"> |
+
+安装包按 **版本 → Android / iOS** 归档，附校验、版本来源和更新说明。详见 [安装包归档](docs/RELEASES.md) 与 [本版更新](docs/releases/v1.3.1.md)。
 
 ## v1.3.0：解忧杂货店，收好喜欢的味道
 
@@ -111,7 +121,7 @@ flowchart LR
 - 备份仅包含**已保存日记及照片**，不包含草稿和关怀反馈；本版支持 100 MB 以内的 JSON 文件。备份是明文文件，请自行妥善保存。
 - 单张导入照片不超过 20 MB / 5,000 万像素；应用副本最长边压缩至 1,800px，有 EXIF 等元数据时重新编码，仅确认无相关元数据的小图直接复用，原图不变。HEIC 是否能导入取决于设备解码能力。
 - 清除浏览器/应用数据、无痕模式或卸载可能丢失记录；先导出重要日记。安卓版仍使用 WebView 的 IndexedDB，并非原生数据库。
-- 安卓 v1.3.0 测试应用显示为「心晴 1.3.0」，可与旧版并存，二者数据独立；测试签名不保证后续覆盖安装。相机、系统分享及返回键仍需实机确认。
+- 安卓 v1.3.1 测试应用显示为「心晴 1.3.1」，可与旧版并存，二者数据独立；测试签名不保证后续覆盖安装。相机、系统分享及返回键仍需实机确认。
 - 本项目提供日常记录与自我关怀，不提供诊断或专业咨询，也不宣称调节效果。
 
 ## 技术与目录
@@ -134,6 +144,7 @@ android/                   Capacitor 安卓工程
 ios/                       Xcode 工程与 Swift 插件配置
 build-native.cjs           两个原生平台共用的本地页面构建
 assets/                    本地图片、音频、图标与许可
+scripts/archive-installers.py  按版本和系统归档安装包、校验和更新索引
 scripts/verify-apk.py       APK 内置资源与插件校验
 scripts/verify-ipa.py       IPA 真机架构、版本、隐私与全部网页资源校验
 tests/                     核心逻辑和浏览器回归
@@ -158,9 +169,9 @@ npm run build
 npm run android:sync
 ```
 
-16 项单元测试覆盖记录、日期范围、缺失日、统计和音频状态。真实 Chromium 回归包含旧数据迁移、上传、刷新恢复、排序封面、长文编辑、失败保留、示例隔离、备份还原、删除及原有心情/自然声流程。
+17 项单元测试覆盖记录、日期范围、缺失日、统计和音频状态。真实 Chromium 回归包含旧数据迁移、上传、刷新恢复、排序封面、长文编辑、失败保留、示例隔离、备份还原、删除及原有心情/自然声流程。
 
-浏览器脚本需要启动本地服务，并设置 `AGENT_BROWSER_BIN`、`TEST_URL`；新版趋势测试另支持 `BROWSER_SESSION`。使用独立测试会话，脚本会清理该测试会话的测试日记数据。运行 `node tests/album-browser-check.cjs`、`node tests/album-layout-browser-check.cjs`、`node tests/care-browser-check.cjs` 或 `node tests/trend-browser-check.cjs`。实际验证范围和未验证项见 [验收记录](design-qa.md)。
+浏览器脚本需要启动本地服务，并设置 `AGENT_BROWSER_BIN`、`TEST_URL`；新版趋势测试另支持 `BROWSER_SESSION`。使用独立测试会话，脚本会清理该测试会话的测试日记数据。运行 `node tests/album-browser-check.cjs`、`node tests/album-layout-browser-check.cjs`、`node tests/care-browser-check.cjs` 、`node tests/shop-browser-check.cjs`、`node tests/shop-photo-browser-check.cjs` 或 `node tests/trend-browser-check.cjs`。实际验证范围和未验证项见 [验收记录](design-qa.md)。
 
 ## 部署与素材
 

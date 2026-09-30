@@ -123,7 +123,6 @@
         <div class="drinks-toolbar"><div class="drink-filters" aria-label="酒单筛选"><button type="button" data-drink-filter="all" aria-pressed="true">全部</button><button type="button" data-drink-filter="recipe" aria-pressed="false">可以自己调</button><button type="button" data-drink-filter="recommendation" aria-pressed="false">好喝推荐</button></div><button type="button" id="drinks-backup" class="text-button">备份与恢复</button></div>
         <p class="drinks-status" id="drinks-status" role="status"></p>
         <div id="drinks-grid" class="drinks-grid"></div>
-        <p class="shop-footnote" id="drinks-privacy">酒单与照片仅保存在本机，可通过备份文件迁移。</p>
       </section>
       <section id="page-drink-detail" class="page shop-page" aria-labelledby="drink-detail-name" hidden>
         <nav class="shop-tabs" aria-label="解忧杂货店分类"><a href="#care"><img src="assets/icons/leaf.svg" class="icon" alt="">自我关怀</a><a href="#drinks" aria-current="page"><img src="assets/icons/martini.svg" class="icon" alt="">骏马特调</a></nav>
@@ -136,23 +135,23 @@
         <div class="drink-editor-heading"><h1 id="drink-editor-title">收录一杯喜欢的味道</h1><p>照片、配方和推荐理由，都可以慢慢补充。</p></div>
         <form id="drink-form" novalidate>
           <div class="drink-editor-layout">
-            <section class="drink-cover-editor" aria-labelledby="drink-cover-label"><div class="drink-cover-label"><h2 id="drink-cover-label">封面照片</h2><span id="drink-cover-state">默认插画 · 封面按 4:3 展示</span></div><div id="drink-cover-preview" class="drink-cover"></div>
-              <div class="drink-photo-actions"><button type="button" id="drink-upload" class="button outline"><img src="assets/icons/upload-simple.svg" class="icon" alt="">上传 / 更换照片</button><button type="button" id="drink-crop" class="button outline"><img src="assets/icons/crop.svg" class="icon" alt="">调整裁剪</button></div>
-              <div class="drink-cover-options"><button type="button" id="drink-default" class="text-button">使用默认插画</button><button type="button" id="drink-camera" class="text-button">拍一张</button></div>
-              <p class="shop-footnote">可从相册选择，也可拍照上传。原照片不受影响。</p><p id="drink-photo-progress" class="photo-progress" role="status" hidden></p>
+            <section class="drink-cover-editor" aria-labelledby="drink-cover-label"><div class="drink-cover-label"><h2 id="drink-cover-label">封面照片</h2><span id="drink-cover-state" class="sr-only">默认插画</span></div><div id="drink-cover-preview" class="drink-cover"></div>
+              <div class="drink-image-mode" role="group" aria-label="照片显示方式"><button type="button" id="drink-fit-full" aria-pressed="true">完整显示</button><button type="button" id="drink-crop" aria-pressed="false"><img src="assets/icons/crop.svg" class="icon" alt="">裁剪封面</button></div>
+              <div class="drink-photo-actions"><button type="button" id="drink-upload" class="button outline"><img src="assets/icons/upload-simple.svg" class="icon" alt="">上传 / 更换照片</button><button type="button" id="drink-camera" class="button outline">拍一张</button></div>
+              <div class="drink-cover-options"><button type="button" id="drink-default" class="text-button">使用默认插画</button></div><p id="drink-photo-progress" class="photo-progress" role="status" hidden></p>
               <input type="file" id="drink-photo-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden><input type="file" id="drink-camera-input" accept="image/*" capture="environment" hidden>
             </section>
             <div class="drink-fields">
               <label for="drink-name">名称 <span>必填</span></label><input id="drink-name" maxlength="60" autocomplete="off" placeholder="给这一杯起个名字">
               <fieldset class="drink-type"><legend>内容类型</legend><label><input name="drink-kind" type="radio" value="recipe" checked><span>可以自己调</span></label><label><input name="drink-kind" type="radio" value="recommendation"><span>好喝推荐</span></label></fieldset>
-              <label for="drink-tags">口味标签 <span>选填</span></label><input id="drink-tags" maxlength="100" placeholder="例如：清爽、柑橘">
+              <fieldset class="drink-taste-field"><legend>口味 <span>可多选</span></legend><div id="drink-tastes" class="drink-tastes"></div></fieldset>
               <label for="drink-alcohol">酒精情况</label><select id="drink-alcohol"><option value="unknown">暂未填写</option><option value="yes">含酒精</option><option value="no">无酒精</option></select>
               <div id="drink-recipe-fields"><label for="drink-ingredients">材料与用量 <span>选填</span></label><textarea id="drink-ingredients" maxlength="3000" rows="3" placeholder="每行一种材料，例如：材料名称、用量"></textarea><label for="drink-steps">调配步骤 <span>选填</span></label><textarea id="drink-steps" maxlength="5000" rows="4" placeholder="写下你的调配方法…"></textarea></div>
               <label for="drink-note" id="drink-note-label">我的心得 <span>选填</span></label><textarea id="drink-note" maxlength="3000" rows="3" placeholder="记下喜欢的口味、搭配或推荐理由"></textarea>
             </div>
           </div>
           <p id="drink-editor-error" class="form-error" role="alert" hidden></p>
-          <div class="drink-editor-bottom"><p id="drink-draft-status" role="status">仅保存在本机</p><div><button type="button" id="drink-editor-cancel" class="button outline">取消</button><button type="submit" id="drink-save" class="button primary">保存到酒单</button></div></div>
+          <div class="drink-editor-bottom"><p id="drink-draft-status" role="status"></p><div><button type="button" id="drink-editor-cancel" class="button outline">取消</button><button type="submit" id="drink-save" class="button primary">保存到酒单</button></div></div>
           <button type="button" id="drink-discard" class="text-button" hidden>丢弃草稿</button>
         </form>
       </section>

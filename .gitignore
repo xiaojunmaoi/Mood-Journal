@@ -22,6 +22,8 @@ docs/*comparison.png
 docs/desktop-*.png
 docs/mobile-*.png
 output/
+安装包/
+installer-output/
 assets/daisies.png
 assets/walking.png
 
@@ -40,3 +42,7 @@ android/local.properties
 *.p8
 *.mobileprovision
 *.provisionprofile
+
+# Python local caches
+__pycache__/
+*.pyc

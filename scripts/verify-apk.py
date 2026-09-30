@@ -29,6 +29,6 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
     info_path = Path(sys.argv[1]).with_name("package-info.txt")
     if info_path.exists():
         info = info_path.read_text(encoding="utf-8")
-        assert "name='com.xiaojunmaoi.xinqing.album.v130'" in info, "Unexpected package ID"
-        assert "versionName='1.3.0-preview'" in info, "Unexpected version"
+        assert "name='com.xiaojunmaoi.xinqing.album.v131'" in info, "Unexpected package ID"
+        assert "versionName='1.3.1-preview'" in info, "Unexpected version"
     print("APK verified: v1.3 drinks, photo pipeline, three native plugins, photos, four sounds, local start URL.")
