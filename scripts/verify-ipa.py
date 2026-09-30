@@ -1,4 +1,4 @@
-"""Validate a real unsigned iPhone binary and its bundled v1.2 web application."""
+"""Validate a real unsigned iPhone binary and its bundled v1.3 web application."""
 from pathlib import Path
 import json
 import plistlib
@@ -12,8 +12,8 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
     names = set(ipa.namelist())
     info = plistlib.loads(ipa.read(base + 'Info.plist'))
     assert info['CFBundleIdentifier'] == 'com.xiaojunmaoi.xinqing'
-    assert info['CFBundleShortVersionString'] == '1.2.0'
-    assert info['CFBundleVersion'] == '4'
+    assert info['CFBundleShortVersionString'] == '1.3.0'
+    assert info['CFBundleVersion'] == '5'
     assert info['MinimumOSVersion'] == '16.0'
     assert 'iPhoneOS' in info['CFBundleSupportedPlatforms'], 'Simulator app cannot be installed on iPhone'
     binary = ipa.read(base + info['CFBundleExecutable'])
@@ -35,7 +35,7 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
     assert not config.get('server', {}).get('url'), 'The app must launch its local bundle'
     for plugin in ('AppPlugin', 'FilesystemPlugin', 'SharePlugin'):
         assert plugin in config.get('packageClassList', []), 'Missing native plugin: ' + plugin
-    for name in ('index.html', 'app.js', 'trend.js', 'trend.css', 'journal.js', 'journal-store.js', 'album.js', 'album.css', 'care.js', 'nature-audio.js', 'assets/capacitor-core.js', 'assets/journal-entry.png'):
+    for name in ('drinks.js', 'drinks.css', 'drink-store.js', 'photo-codec.js', 'photo-tools.js', 'photo-worker.js', 'assets/drink-lime.webp', 'assets/drink-orange.webp', 'assets/drink-tea.webp', 'assets/shop-osmanthus.webp', 'index.html', 'app.js', 'trend.js', 'trend.css', 'journal.js', 'journal-store.js', 'album.js', 'album.css', 'care.js', 'nature-audio.js', 'assets/capacitor-core.js', 'assets/journal-entry.png'):
         assert base + 'public/' + name in names, 'Missing UI file: ' + name
     for sound in ('rain', 'ocean', 'forest', 'stream'):
         assert base + f'public/assets/audio/{sound}.m4a' in names
@@ -52,4 +52,4 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
             if file.is_file():
                 name = file.relative_to(source).as_posix()
                 assert ipa.read(base + 'public/' + name) == file.read_bytes(), 'Bundled UI mismatch: ' + name
-    print('Verified: v1.2.0 (4), arm64 iPhone device binary, all web assets, privacy and three plugins. UNSIGNED: signing is required before installation.')
+    print('Verified: v1.3.0 (5), arm64 iPhone device binary, all web assets, privacy and three plugins. UNSIGNED: signing is required before installation.')

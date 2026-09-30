@@ -1,5 +1,15 @@
 # 原型截图说明
 
+## v1.3 解忧杂货店
+
+2026-09-30 采集独立 Chromium 示例会话。桌面1440 × 1024，手机390 × 844；全部来自实际运行页面，不是真机照片。示例饮品图片由 Image Gen 生成，编辑页上传同一演示图片，不涉及用户私人数据。PNG转JPEG，仅压缩未改写内容。
+
+- [桌面酒单](shop-desktop.jpg)、[手机酒单](shop-mobile.jpg)
+- [桌面独立编辑](shop-editor-desktop.jpg)、[手机独立编辑](shop-editor-mobile.jpg)
+- [完整自我关怀桌面](shop-care-desktop.jpg)、[完整自我关怀手机](shop-care-mobile.jpg)
+- [设计参考与对照](../iterations/shop/DESIGN.md)
+
+
 [返回项目首页](../../README.md) · [详细 PRD](../PRD.md)
 
 本目录包含 v1.0 / v1.1 历史截图和 v1.2 实际实现截图，用于 README 与 PRD。

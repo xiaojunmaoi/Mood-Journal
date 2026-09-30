@@ -1,31 +1,37 @@
-# Android v1.2.0 测试版：安装与构建
+# Android v1.3.0 测试版：安装与构建
 
 心晴使用 Capacitor 将同一份网页代码打包为 Android App。页面、插画、示例照片和自然声音频都在 APK 中，启动不需要远程网站。
 
 ## 用数据线安装
 
-1. 将 `xinqing-album-v1.2.0-preview.apk` 下载到电脑。
+1. 将 `xinqing-album-v1.3.0-preview.apk` 下载到电脑。
 2. 用可传输数据的 USB 线连接手机，解锁后选择「文件传输」。
 3. 把 APK 复制到手机 `Download` / 下载目录。
 4. 在手机文件管理器打开 APK，按系统提示允许该来源安装应用。
-5. 安装后打开 **心晴 1.2.0**。复制安装不需要开启 USB 调试。
+5. 安装后打开 **心晴 1.3.0**。复制安装不需要开启 USB 调试。
 
-本版包名为 `com.xiaojunmaoi.xinqing.album.v120`，版本 `1.2.0-preview`。可与 v1.1.1 的 `com.xiaojunmaoi.xinqing.album.v111`、v1.1 的 `com.xiaojunmaoi.xinqing.album` 和 v1.0 的 `com.xiaojunmaoi.xinqing` 并存，避免为签名冲突卸载旧 App；两个应用的数据独立。**不要为了安装测试版删除有重要日记的旧版。**
+本版包名为 `com.xiaojunmaoi.xinqing.album.v130`，版本 `1.3.0-preview`。可与 v1.2.0 的 `com.xiaojunmaoi.xinqing.album.v120`、v1.1.1 的 `com.xiaojunmaoi.xinqing.album.v111`、v1.1 的 `com.xiaojunmaoi.xinqing.album` 和 v1.0 的 `com.xiaojunmaoi.xinqing` 并存，避免为签名冲突卸载旧 App；两个应用的数据独立。**不要为了安装测试版删除有重要日记的旧版。**
 
-## 从已安装的 v1.1 / v1.1.1 转移日记
+## 从已安装的 v1.1 / v1.1.1 / v1.2.0 转移日记
 
 1. 在旧版「心晴·影集」中打开「我的手帐 → 备份与恢复 → 导出图文备份」。通过系统分享保存 JSON 文件。
-2. 安装并打开「心晴 1.2.0」，进入「备份与恢复」，选择刚才的 JSON，核对预览后确认导入。
+2. 安装并打开「心晴 1.3.0」，进入「备份与恢复」，选择刚才的 JSON，核对预览后确认导入。
 3. 确认照片和正文都在后继续使用新版。旧版仍保留原记录，不需要卸载；草稿需先保存为日记，关怀反馈不在图文备份范围内。
 
 本版沿用测试签名，没有旧 APK 的固定签名私钥，因此使用不同包名并存，不承诺覆盖安装。
 
 ## 本版新增
 
+- 解忧杂货店包含完整的自我关怀与个人骏马特调；支持照片封面、独立编辑、裁剪、详情与酒单备份。
+- 日记多图后台处理、逐张预览、保持顺序、可以停止；照片批次合并保存草稿。
+- 酒单与日记分别备份，个人数据不会自动公开或跨设备同步。
+
+以下 v1.2 能力继续保留：
+
 - 首页「写图文日记」改为整块绿色入口，位于完整心情表单之前；从首页进入后取消，会回到首页并保留尚未提交的心情和文字。
 - 心情轨迹支持近 7 天、近 30 天、自定义日期；手机使用底部日期面板。首页、回顾页和因素统计共用所选范围，刷新后保留选择。
 - 点触曲线可查看当天心情均值及记录条数；空范围可以直接换时间。日期原生选择器的外观取决于手机系统与 WebView。
-- 页面仍使用「心晴」品牌；桌面图标显示「心晴 1.2.0」，方便辨认新旧安装。
+- 页面仍使用「心晴」品牌；桌面图标显示「心晴 1.3.0」，方便辨认新旧安装。
 
 以下影集和本地记录能力继续保留：
 
@@ -73,7 +79,7 @@ npm run android:open
 
 打开 [Android APK 工作流](https://github.com/xiaojunmaoi/Mood-Journal/actions/workflows/android-apk.yml)，选择 `main` 手动运行。
 
-工作流执行语法检查、单元测试、前端构建、Capacitor 同步、Gradle 编译，然后验证 APK 签名、包信息、照片与音频资源、三个原生插件。成功产物位于 **xinqing-album-v1.2.0-preview** artifact，包含 APK、`SHA256SUMS.txt`、签名与包信息。
+工作流执行语法检查、单元测试、前端构建、Capacitor 同步、Gradle 编译，然后验证 APK 签名、包信息、照片与音频资源、三个原生插件。成功产物位于 **xinqing-album-v1.3.0-preview** artifact，包含 APK、`SHA256SUMS.txt`、签名与包信息。
 
 Actions 产物保留 30 天，下载到本地后不受该期限影响。下载 GitHub Actions artifact 通常需要登录 GitHub；网站仍可公开访问。本工作流不自动发布应用商店或 GitHub Release。
 

@@ -21,7 +21,7 @@
   function create(api) {
     let active = '', currentId = null, filter = 'all', editor = null, managing = false, processing = false, saving = false;
     let revision = 0, dirty = false, draftTimer, draftChain = Promise.resolve(), routeVersion = 0;
-    let demoDrafts = new Map(), preview = [], previewIndex = 0, pendingImport = null;
+    let demoDrafts = new Map(), preview = [], previewIndex = 0, pendingImport = null, photoBatch;
     const urls = new Map();
     function photoURL(photo) {
       if (photo.blob instanceof Blob) {
@@ -99,10 +99,11 @@
       $('#editor-count').textContent = `${editor.note.length} / 5000`; $('#editor-count').classList.toggle('over', editor.note.length > 5000);
       $('#editor-error').hidden = true; $('#discard-draft').hidden = false;
       setDraftStatus(api.isDemo() ? '示例草稿 · 不影响个人记录' : '正在保存草稿…');
-      draftTimer = setTimeout(() => flushDraft().catch(() => {}), 450);
+      if (!processing) draftTimer = setTimeout(() => flushDraft().catch(() => {}), 450);
     }
-    async function flushDraft() {
+    async function flushDraft(force = false) {
       clearTimeout(draftTimer);
+      if (processing && !force) return draftChain;
       if (!editor || !dirty) return draftChain;
       readEditor();
       const snapshot = structuredClone(editor), key = draftKey(), version = revision, isDemo = api.isDemo();
@@ -160,33 +161,27 @@
       document.querySelectorAll('#editor-tag-options input').forEach(input => { input.checked = editor.tags.includes(input.value); });
       syncMood(); renderPhotos(); gcURLs();
     }
-    async function normalizePhoto(file) {
-      if (file.size > 20 * 1024 * 1024) throw new Error(`${file.name} 超过 20 MB，请选择较小的照片。`);
-      if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') throw new Error(`${file.name} 暂不支持，请选择 JPG、PNG 或 WebP 照片。`);
-      let bitmap;
-      try { bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { throw new Error(`${file.name} 无法解码，请转成 JPG、PNG 或 WebP 后重试。`); }
-      try {
-        if (bitmap.width * bitmap.height > 50000000) throw new Error(`${file.name} 尺寸过大，请先缩小后再添加。`);
-        const ratio = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height)), canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(bitmap.width * ratio)); canvas.height = Math.max(1, Math.round(bitmap.height * ratio));
-        const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .84));
-        if (!blob) throw new Error('照片处理失败，请重试。');
-        return { id: crypto.randomUUID(), blob, width: canvas.width, height: canvas.height, name: file.name.slice(0, 200) };
-      } finally { bitmap.close(); }
-    }
     async function addPhotos(files) {
       if (!files.length || processing || saving) return;
       if (files.length + editor.photos.length > 9) { showError(`还可以添加 ${9 - editor.photos.length} 张，请重新选择；已有照片保留。`); return; }
-      processing = true; $('#editor-save').disabled = true; $('#photo-progress').hidden = false; renderPhotos();
-      const failures = [];
-      for (let i = 0; i < files.length; i++) {
-        $('#photo-progress').textContent = `正在整理照片 ${i + 1} / ${files.length}…`;
-        try { editor.photos.push(await normalizePhoto(files[i])); changed(); } catch (error) { failures.push(error.message); }
-      }
-      processing = false; $('#editor-save').disabled = false; $('#photo-progress').hidden = true; renderPhotos();
-      try { await flushDraft(); } catch { failures.push('照片草稿尚未保存，请保留页面并重试。'); }
-      if (failures.length) showError(failures.join('\n')); else api.toast('照片已添加，可以写下当时的感受。');
+      processing = true; photoBatch = new AbortController(); clearTimeout(draftTimer);
+      const original = editor.photos.slice();
+      $('#editor-save').disabled = true; $('#photo-progress').hidden = false; $('#photo-cancel').hidden = false; $('#photo-cancel').disabled = false;
+      $('#photo-progress').textContent = `正在整理照片 0 / ${files.length}，可以继续写日记…`; renderPhotos();
+      try {
+        const result = await PhotoTools.processMany(files, { signal: photoBatch.signal, onProgress: ({ completed, total, results }) => {
+          editor.photos = [...original, ...results.filter(Boolean)];
+          $('#photo-progress').textContent = `正在整理照片 ${completed} / ${total}，可以继续写日记…`;
+          renderPhotos();
+        } });
+        editor.photos = [...original, ...result.photos]; changed();
+        const failures = result.failures.map(item => item.message);
+        $('#photo-progress').textContent = '照片已整理，正在保存草稿…';
+        try { await flushDraft(true); } catch { failures.push('照片草稿尚未保存，请保留页面并重试。'); }
+        if (failures.length) showError(failures.join('\n'));
+        else api.toast(result.cancelled ? `已停止添加，保留 ${result.photos.length} 张处理完成的照片。` : '照片已添加，可以写下当时的感受。');
+      } catch (error) { showError(`照片处理未完成：${error.message}，已完成的照片和文字仍保留。`); changed(); }
+      finally { processing = false; photoBatch = null; $('#editor-save').disabled = false; $('#photo-progress').hidden = true; $('#photo-cancel').hidden = true; renderPhotos(); gcURLs(); if (dirty) flushDraft().catch(() => {}); }
     }
     function showError(message) { $('#editor-error').textContent = message; $('#editor-error').hidden = false; }
     async function saveEditor(event) {
@@ -224,6 +219,7 @@
     $('#photo-input').addEventListener('change', event => { const files = [...event.target.files]; event.target.value = ''; addPhotos(files); });
     $('#camera-input').addEventListener('change', event => { const files = [...event.target.files]; event.target.value = ''; addPhotos(files); });
     $('#camera-photo').addEventListener('click', () => $('#camera-input').click());
+    $('#photo-cancel').addEventListener('click', () => { photoBatch?.abort(); $('#photo-cancel').disabled = true; });
     $('#editor-mood').addEventListener('click', () => $('#album-mood-dialog').showModal());
     J.moods.forEach((label, i) => {
       const b = button('', '', () => { editor.mood = i + 1; syncMood(); changed(); $('#album-mood-dialog').close(); }); b.setAttribute('aria-label', label); b.setAttribute('aria-pressed', 'false'); b.append(face(i + 1), el('span', '', label)); $('#album-mood-options').append(b);

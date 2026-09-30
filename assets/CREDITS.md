@@ -9,3 +9,6 @@
 用户选定的设计概念图与实际页面对照保存在 [设计档案](../docs/iterations/photo-journal/DESIGN.md)。概念图不冒充实际软件截图。
 - v1.2 `journal-entry.png`（512 × 341，透明 PNG）：2026-09-28 通过 Image Gen 生成的湖景照片叠放与植物插画，用于首页图文入口，不是用户照片。
 - v1.2 新增 `icons/calendar-blank.svg`：来自 Phosphor Icons 官方 regular 集合，沿用上述图标许可。
+
+- v1.3 `drink-lime.webp`、`drink-orange.webp`、`drink-tea.webp`（1200 × 900）和 `shop-osmanthus.webp`（600 × 450）：2026-09-30 使用内置 ImageGen 生成，用于虚构示例酒单、默认封面和桂花装饰。前两张为摄影风格，第三张为水彩；并非用户私人照片。
+- v1.3 `martini.svg`、`upload-simple.svg`、`crop.svg`：来自 Phosphor 官方 regular 图标集合，沿用 MIT 许可。

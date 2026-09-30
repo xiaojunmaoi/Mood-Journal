@@ -11,10 +11,15 @@
   <link rel="stylesheet" href="care.css">
   <link rel="stylesheet" href="album.css">
   <link rel="stylesheet" href="trend.css">
+  <link rel="stylesheet" href="drinks.css">
   <script src="assets/capacitor-core.js" defer></script>
   <script src="journal.js" defer></script>
   <script src="journal-store.js" defer></script>
+  <script src="photo-codec.js" defer></script>
+  <script src="photo-tools.js" defer></script>
   <script src="album.js" defer></script>
+  <script src="drink-store.js" defer></script>
+  <script src="drinks.js" defer></script>
   <script src="nature-audio.js" defer></script>
   <script src="care.js" defer></script>
   <script src="trend.js" defer></script>
@@ -28,7 +33,7 @@
     <nav class="main-nav" aria-label="主要导航">
       <a href="#today" data-page="today" class="active" aria-current="page">今日心情</a>
       <a href="#review" data-page="review">情绪回顾</a>
-      <a href="#care" data-page="care">自我关怀</a>
+      <a href="#care" data-page="care">解忧杂货店</a>
     </nav>
     <button id="demo-toggle" class="text-button demo-toggle"><img src="assets/icons/leaf.svg" alt="" class="icon"> <span>查看示例</span><img src="assets/icons/caret-right.svg" alt="" class="icon small"></button>
   </header>
@@ -100,8 +105,9 @@
         <div class="review-album-link"><p>照片、文字与心情，都收在你的手帐里。</p><a href="#album" class="button outline">翻看我的手帐 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></a></div>
       </section>
 
-      <section id="page-care" class="page" aria-labelledby="care-title" hidden>
-        <div class="page-heading"><span class="eyebrow">留一点时间，给自己</span><h1 id="care-title">不急着变好，先照顾好自己。</h1><p>选一件现在愿意做的小事。没有任务，也不需要打卡。</p></div>
+      <section id="page-care" class="page shop-page" aria-labelledby="care-title" hidden>
+        <div class="shop-heading"><div><h1>解忧杂货店</h1><p>收藏一点喜欢，给日常添些趣味。</p></div><p class="shop-handnote handwritten">好的味道，<br>也在平凡的日子里。</p></div><nav class="shop-tabs" aria-label="解忧杂货店分类"><a href="#care" aria-current="page"><img src="assets/icons/leaf.svg" class="icon" alt="">自我关怀</a><a href="#drinks"><img src="assets/icons/martini.svg" class="icon" alt="">骏马特调</a></nav>
+        <div class="page-heading"><span class="eyebrow">留一点时间，给自己</span><h2 id="care-title">不急着变好，先照顾好自己。</h2><p>选一件现在愿意做的小事。没有任务，也不需要打卡。</p></div>
         <div class="care-grid">
           <article class="activity-card breathing-card"><img src="assets/icons/wind.svg" class="activity-icon" alt=""><p class="eyebrow">慢下来 · 1分钟</p><h2>跟着呼吸，回到此刻</h2><p>暂时放下手边的事，跟随轻柔的节奏，自然地呼吸。</p><button class="button outline" data-activity="breathe">开始呼吸练习 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
           <article class="activity-card noise-card"><img src="assets/icons/headphones.svg" class="activity-icon" alt=""><p class="eyebrow">静一静 · 白噪音</p><h2>给自己一段自然的声音</h2><p>细雨、海浪、森林、溪流，选一种此刻想听的声音。</p><div class="sound-preview" aria-label="提供细雨、海浪、森林和溪流四种自然声"><span><img src="assets/icons/cloud-rain.svg" alt="">细雨</span><span><img src="assets/icons/waves.svg" alt="">海浪</span><span><img src="assets/icons/tree.svg" alt="">森林</span><span><img src="assets/icons/drop.svg" alt="">溪流</span></div><button class="button outline" data-activity="noise">选择白噪音 <img src="assets/icons/arrow-right.svg" class="icon" alt=""></button></article>
@@ -110,6 +116,47 @@
         <section class="care-history"><div class="section-heading"><h2>留给自己的小片刻</h2><span class="data-label">关怀记录</span></div><div id="care-history-list"></div></section>
         <p class="care-disclaimer">这里提供日常自我关怀，不替代专业帮助。按舒服的节奏进行，任何时候都可以停下。</p>
       </section>
+
+      <section id="page-drinks" class="page shop-page" aria-labelledby="drinks-title" hidden>
+        <div class="shop-heading"><div><h1>解忧杂货店</h1><p>收藏一点喜欢，给日常添些趣味。</p></div><p class="shop-handnote handwritten">好的味道，<br>也在平凡的日子里。</p></div><nav class="shop-tabs" aria-label="解忧杂货店分类"><a href="#care"><img src="assets/icons/leaf.svg" class="icon" alt="">自我关怀</a><a href="#drinks" aria-current="page"><img src="assets/icons/martini.svg" class="icon" alt="">骏马特调</a></nav>
+        <div class="drinks-heading"><div><h2 id="drinks-title">骏马特调</h2><p>记下喜欢的味道，也分享可以自己调的一杯。</p></div><a href="#drink-write" class="button outline"><img src="assets/icons/plus.svg" class="icon" alt="">收录一杯</a></div>
+        <div class="drinks-toolbar"><div class="drink-filters" aria-label="酒单筛选"><button type="button" data-drink-filter="all" aria-pressed="true">全部</button><button type="button" data-drink-filter="recipe" aria-pressed="false">可以自己调</button><button type="button" data-drink-filter="recommendation" aria-pressed="false">好喝推荐</button></div><button type="button" id="drinks-backup" class="text-button">备份与恢复</button></div>
+        <p class="drinks-status" id="drinks-status" role="status"></p>
+        <div id="drinks-grid" class="drinks-grid"></div>
+        <p class="shop-footnote" id="drinks-privacy">酒单与照片仅保存在本机，可通过备份文件迁移。</p>
+      </section>
+      <section id="page-drink-detail" class="page shop-page" aria-labelledby="drink-detail-name" hidden>
+        <nav class="shop-tabs" aria-label="解忧杂货店分类"><a href="#care"><img src="assets/icons/leaf.svg" class="icon" alt="">自我关怀</a><a href="#drinks" aria-current="page"><img src="assets/icons/martini.svg" class="icon" alt="">骏马特调</a></nav>
+        <div class="drink-detail-toolbar"><a href="#drinks" class="text-button"><img src="assets/icons/caret-left.svg" class="icon" alt="">返回酒单</a><div><button type="button" id="drink-detail-edit" class="text-button">编辑</button><button type="button" id="drink-detail-delete" class="text-button">删除</button></div></div>
+        <article class="drink-detail-layout"><button type="button" id="drink-detail-picture" class="drink-detail-picture" aria-label="查看完整照片"></button><div><p id="drink-detail-kind" class="eyebrow"></p><h1 id="drink-detail-name"></h1><div id="drink-detail-tags" class="drink-tags"></div><section id="drink-ingredients-section"><h2>材料与用量</h2><p id="drink-detail-ingredients" class="drink-lines"></p></section><section id="drink-steps-section"><h2>调配步骤</h2><p id="drink-detail-steps" class="drink-lines"></p></section><section id="drink-note-section"><h2 id="drink-note-title">我的心得</h2><p id="drink-detail-note" class="drink-lines"></p></section></div></article>
+      </section>
+      <section id="page-drink-editor" class="page shop-page" aria-labelledby="drink-editor-title" hidden>
+        <nav class="shop-tabs" aria-label="解忧杂货店分类"><a href="#care"><img src="assets/icons/leaf.svg" class="icon" alt="">自我关怀</a><a href="#drinks" aria-current="page"><img src="assets/icons/martini.svg" class="icon" alt="">骏马特调</a></nav>
+        <button type="button" id="drink-editor-back" class="text-button"><img src="assets/icons/caret-left.svg" class="icon" alt="">返回酒单</button>
+        <div class="drink-editor-heading"><h1 id="drink-editor-title">收录一杯喜欢的味道</h1><p>照片、配方和推荐理由，都可以慢慢补充。</p></div>
+        <form id="drink-form" novalidate>
+          <div class="drink-editor-layout">
+            <section class="drink-cover-editor" aria-labelledby="drink-cover-label"><div class="drink-cover-label"><h2 id="drink-cover-label">封面照片</h2><span id="drink-cover-state">默认插画 · 封面按 4:3 展示</span></div><div id="drink-cover-preview" class="drink-cover"></div>
+              <div class="drink-photo-actions"><button type="button" id="drink-upload" class="button outline"><img src="assets/icons/upload-simple.svg" class="icon" alt="">上传 / 更换照片</button><button type="button" id="drink-crop" class="button outline"><img src="assets/icons/crop.svg" class="icon" alt="">调整裁剪</button></div>
+              <div class="drink-cover-options"><button type="button" id="drink-default" class="text-button">使用默认插画</button><button type="button" id="drink-camera" class="text-button">拍一张</button></div>
+              <p class="shop-footnote">可从相册选择，也可拍照上传。原照片不受影响。</p><p id="drink-photo-progress" class="photo-progress" role="status" hidden></p>
+              <input type="file" id="drink-photo-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden><input type="file" id="drink-camera-input" accept="image/*" capture="environment" hidden>
+            </section>
+            <div class="drink-fields">
+              <label for="drink-name">名称 <span>必填</span></label><input id="drink-name" maxlength="60" autocomplete="off" placeholder="给这一杯起个名字">
+              <fieldset class="drink-type"><legend>内容类型</legend><label><input name="drink-kind" type="radio" value="recipe" checked><span>可以自己调</span></label><label><input name="drink-kind" type="radio" value="recommendation"><span>好喝推荐</span></label></fieldset>
+              <label for="drink-tags">口味标签 <span>选填</span></label><input id="drink-tags" maxlength="100" placeholder="例如：清爽、柑橘">
+              <label for="drink-alcohol">酒精情况</label><select id="drink-alcohol"><option value="unknown">暂未填写</option><option value="yes">含酒精</option><option value="no">无酒精</option></select>
+              <div id="drink-recipe-fields"><label for="drink-ingredients">材料与用量 <span>选填</span></label><textarea id="drink-ingredients" maxlength="3000" rows="3" placeholder="每行一种材料，例如：材料名称、用量"></textarea><label for="drink-steps">调配步骤 <span>选填</span></label><textarea id="drink-steps" maxlength="5000" rows="4" placeholder="写下你的调配方法…"></textarea></div>
+              <label for="drink-note" id="drink-note-label">我的心得 <span>选填</span></label><textarea id="drink-note" maxlength="3000" rows="3" placeholder="记下喜欢的口味、搭配或推荐理由"></textarea>
+            </div>
+          </div>
+          <p id="drink-editor-error" class="form-error" role="alert" hidden></p>
+          <div class="drink-editor-bottom"><p id="drink-draft-status" role="status">仅保存在本机</p><div><button type="button" id="drink-editor-cancel" class="button outline">取消</button><button type="submit" id="drink-save" class="button primary">保存到酒单</button></div></div>
+          <button type="button" id="drink-discard" class="text-button" hidden>丢弃草稿</button>
+        </form>
+      </section>
+
       <section id="page-album" class="page" aria-labelledby="album-title" hidden>
         <nav class="review-tabs" aria-label="回顾方式"><a href="#review">情绪趋势</a><a href="#album" aria-current="page">我的手帐</a></nav>
         <div class="album-heading"><div><p class="eyebrow" id="album-month"></p><h1 id="album-title">把日子，收进相册。</h1></div><a href="#write" class="button outline album-new"><img src="assets/icons/plus.svg" class="icon" alt="">记一笔</a></div>
@@ -129,7 +176,7 @@
             <div class="photos-heading"><h2>照片 <span id="photo-count">0 / 9</span></h2><div><button type="button" id="camera-photo" class="text-button">拍一张</button><button type="button" id="manage-photos" class="text-button" aria-pressed="false">管理</button></div></div>
             <div id="editor-photos" class="editor-photos"></div><p class="photo-hint">首张作为封面；在「管理」中调整顺序和移除照片。</p>
             <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden><input id="camera-input" type="file" accept="image/*" capture="environment" hidden>
-            <p id="photo-progress" class="photo-progress" role="status" hidden></p>
+            <div class="photo-batch-status"><p id="photo-progress" class="photo-progress" role="status" hidden></p><button type="button" id="photo-cancel" class="text-button" hidden>停止添加</button></div>
             <button type="button" id="editor-mood" class="editor-mood"><span>此刻心情 <small>· 可选</small></span><span id="editor-mood-value">先不填写</span><img src="assets/icons/caret-right.svg" class="icon small" alt=""></button>
             <details class="editor-tags"><summary>影响因素 · 可选</summary><div id="editor-tag-options" class="tag-options"></div></details>
             <p id="editor-error" class="form-error" role="alert" hidden></p>
@@ -161,6 +208,18 @@
   <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">删除这条记录？</h2><p>这条记录删除后无法恢复，其他记录不受影响。</p><div class="dialog-actions"><button id="cancel-delete" class="button outline">保留记录</button><button id="confirm-delete" class="button primary">确认删除</button></div></dialog>
   <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-title"><button class="icon-button dialog-close" id="close-privacy" aria-label="关闭隐私说明"><img src="assets/icons/x.svg" alt=""></button><h2 id="privacy-title">只属于你的手帐</h2><p>日记和照片保存在当前浏览器的本机数据库，关怀反馈保存在本机，不上传到服务器。不同设备、浏览器或网址之间不会自动同步。</p><p>清理浏览器数据或使用无痕模式，可能导致记录丢失。请通过「我的手帐 → 备份与恢复」导出图文日记。关怀练习反馈暂不包含在图文备份中。</p><p>示例手帐与个人记录分开；情绪小结采用统计，关怀建议采用简单规则，没有将你的日记发送给 AI。</p><button class="button primary" id="privacy-understood">知道了</button></dialog>
   <dialog id="album-mood-dialog" class="small-dialog" aria-labelledby="album-mood-title"><button type="button" class="icon-button dialog-close" data-close="album-mood-dialog" aria-label="关闭心情选择"><img src="assets/icons/x.svg" alt=""></button><h2 id="album-mood-title">此刻，感觉怎么样？</h2><div id="album-mood-options" class="album-mood-options"></div><button type="button" id="clear-album-mood" class="text-button">先不填写心情</button></dialog>
+
+  <dialog id="drink-crop-dialog" class="drink-crop-dialog" aria-labelledby="drink-crop-title">
+    <button type="button" class="icon-button dialog-close" data-close="drink-crop-dialog" aria-label="关闭裁剪"><img src="assets/icons/x.svg" alt=""></button>
+    <h2 id="drink-crop-title">调整封面</h2><p>拖动照片或调整滑块，找到喜欢的位置。</p>
+    <div id="drink-crop-stage" class="drink-cover" tabindex="0" role="img" aria-label="封面预览，可使用方向键移动"></div>
+    <label>放大<input type="range" id="drink-crop-zoom" min="1" max="3" step=".05" value="1"></label><label>水平位置<input type="range" id="drink-crop-x" min="0" max="100" value="50"></label><label>垂直位置<input type="range" id="drink-crop-y" min="0" max="100" value="50"></label>
+    <div class="dialog-actions"><button type="button" id="drink-crop-reset" class="button outline">居中重置</button><button type="button" id="drink-crop-apply" class="button primary">使用此封面</button></div>
+  </dialog>
+  <dialog id="drink-image-dialog" class="drink-image-dialog" aria-label="完整饮品照片"><button type="button" class="icon-button dialog-close" data-close="drink-image-dialog" aria-label="关闭完整照片"><img src="assets/icons/x.svg" alt=""></button><img id="drink-full-image" alt="完整饮品照片"></dialog>
+  <dialog id="drink-delete-dialog" class="small-dialog" aria-labelledby="drink-delete-title"><h2 id="drink-delete-title">删除这一杯？</h2><p>这条酒单记录和本机封面会被移除，相册原照片不会改变。</p><p id="drink-delete-error" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" class="button outline" data-close="drink-delete-dialog">保留</button><button type="button" id="drink-delete-confirm" class="button primary">确认删除</button></div></dialog>
+  <dialog id="drinks-backup-dialog" class="small-dialog" aria-labelledby="drinks-backup-title"><button type="button" class="icon-button dialog-close" data-close="drinks-backup-dialog" aria-label="关闭备份窗口"><img src="assets/icons/x.svg" alt=""></button><h2 id="drinks-backup-title">收好你的酒单</h2><p>备份包含配方、推荐、照片与裁剪位置。导入时只新增缺少的记录，不覆盖已有内容。与手帐日记分别备份。</p><div class="dialog-actions"><button type="button" id="drinks-export" class="button primary">导出备份</button><button type="button" id="drinks-import" class="button outline">导入备份</button></div><input type="file" id="drinks-backup-input" accept=".json,application/json" hidden><p id="drinks-backup-status" role="status"></p><button type="button" id="drinks-import-confirm" class="button primary" hidden>确认新增</button></dialog>
+
   <dialog id="photo-viewer" class="photo-viewer" aria-label="照片预览"><button type="button" class="icon-button viewer-close" data-close="photo-viewer" aria-label="关闭照片预览"><img src="assets/icons/x.svg" alt=""></button><img id="viewer-image" alt="日记照片"><div class="viewer-controls"><button type="button" id="viewer-prev" class="icon-button" aria-label="上一张照片"><img src="assets/icons/caret-left.svg" alt=""></button><p id="viewer-position" aria-live="polite"></p><button type="button" id="viewer-next" class="icon-button" aria-label="下一张照片"><img src="assets/icons/caret-right.svg" alt=""></button></div></dialog>
   <dialog id="album-delete-dialog" class="small-dialog" aria-labelledby="album-delete-title"><h2 id="album-delete-title">删除这篇日记？</h2><p>文字和手帐中的照片副本会一起删除，手机相册原图不受影响。删除后无法撤销。</p><p id="album-delete-error" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" class="button outline" data-close="album-delete-dialog">保留日记</button><button type="button" id="album-delete-confirm" class="button primary">确认删除</button></div></dialog>
   <dialog id="backup-dialog" class="small-dialog" aria-labelledby="backup-title"><button type="button" class="icon-button dialog-close" data-close="backup-dialog" aria-label="关闭备份窗口"><img src="assets/icons/x.svg" alt=""></button><h2 id="backup-title">好好收好这些日子</h2><p>备份包含已保存的日记文字、照片、日期与心情。草稿和关怀反馈不包含在内；备份文件未加密，请自行妥善保管。</p><div class="backup-actions"><button type="button" id="export-journal" class="button primary">导出图文备份</button><button type="button" id="import-journal" class="button outline">选择备份恢复</button></div><input id="backup-input" type="file" accept=".json,application/json" hidden><p id="backup-status" role="status"></p><button type="button" id="confirm-import" class="button primary" hidden>确认导入</button><p class="fine-print">恢复会新增未出现的记录；相同 ID 的记录一律跳过，保留本机版本，不会覆盖现有日记。</p></dialog>

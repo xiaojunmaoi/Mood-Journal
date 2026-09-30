@@ -8,7 +8,7 @@
   const ENTRY_KEY = 'xinqing.entries.v1', CARE_KEY = 'xinqing.care.v1';
   let entries = [], careLogs = [], demo = false, demoEntries = [...window.AlbumUI.examples(), ...J.examples()], demoCare = [], editingId = null, deletingId = null;
   let selectedMood = 0, currentSuggestion = 'walk', page = 'today', toastTimeout;
-  let rawCorrupt = null, album, readyPromise, storageReady = false, writeReturn = 'album';
+  let rawCorrupt = null, album, shop, readyPromise, storageReady = false, writeReturn = 'album';
   const drafts = { personal: { mood: 0, tags: [], note: '' }, demo: { mood: 4, tags: ['工作'], note: '' } };
   const activityNames = { breathe: '1分钟呼吸练习', rain: '温柔雨声', noise: '白噪音', walk: '5分钟散步' };
   let activity = null, activityTimer = null;
@@ -110,21 +110,24 @@
   }
   async function changePage(next) {
     trend.closeMenus();
-    next = /^(today|review|care|album|write|entry\/[^/]+|edit\/[^/]+)$/.test(next) ? next : 'today';
+    next = /^(today|review|care|album|write|drinks|drink-write|drink\/[^/]+|drink-edit\/[^/]+|entry\/[^/]+|edit\/[^/]+)$/.test(next) ? next : 'today';
     if (album && !await album.beforeLeave(next)) { history.replaceState(null, '', `#${page}`); return; }
+    if (shop && !await shop.beforeLeave(next)) { history.replaceState(null, '', `#${page}`); return; }
     $('#save-success').hidden = true;
     page = next;
-    const surface = next === 'write' || next.startsWith('edit/') ? 'editor' : next.startsWith('entry/') ? 'entry' : next;
-    const nav = ['album', 'editor', 'entry'].includes(surface) ? 'review' : surface;
+    const surface = next === 'drink-write' || next.startsWith('drink-edit/') ? 'drink-editor' : next.startsWith('drink/') ? 'drink-detail' : next === 'write' || next.startsWith('edit/') ? 'editor' : next.startsWith('entry/') ? 'entry' : next;
+    const nav = ['drinks', 'drink-detail', 'drink-editor'].includes(surface) ? 'care' : ['album', 'editor', 'entry'].includes(surface) ? 'review' : surface;
+    $('#demo-toggle').disabled = surface === 'editor' || surface === 'drink-editor';
     document.body.dataset.surface = surface;
     $$('.page').forEach(section => { section.hidden = section.id !== `page-${surface}`; });
     $$('.main-nav a').forEach(link => { const active = link.dataset.page === nav; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
-    document.title = `${{ today: '今日心情', review: '情绪回顾', care: '自我关怀', album: '我的手帐', editor: '写日记', entry: '日记' }[surface]} · 心晴`;
-    if (album) { try { await readyPromise; await album.route(next); } catch (error) { toast(`页面暂未准备好：${error.message}`); } }
+    document.title = `${{ today: '今日心情', review: '情绪回顾', care: '解忧杂货店', drinks: '骏马特调', 'drink-detail': '酒单详情', 'drink-editor': '收录一杯', album: '我的手帐', editor: '写日记', entry: '日记' }[surface]} · 心晴`;
+    if (album) { try { await readyPromise; await album.route(next); await shop?.route(next); } catch (error) { toast(`页面暂未准备好：${error.message}`); } }
     renderData();
   }
   function goto(next) { if (next === 'write') writeReturn = page === 'today' ? 'today' : 'album'; if (location.hash === `#${next}`) changePage(next); else location.hash = next; window.scrollTo({ top: 0, behavior: 'instant' }); }
   function toggleDemo() {
+    if (['editor', 'drink-editor'].includes(document.body.dataset.surface)) { toast('先保存或退出当前编辑，再切换示例。'); return; }
     drafts[demo ? 'demo' : 'personal'] = { mood: selectedMood, tags: tagsSelected(), note: $('#journal-note').value, editingId };
     demo = !demo;
     editingId = drafts[demo ? 'demo' : 'personal'].editingId || null;
@@ -149,7 +152,7 @@
   }
   function renderData() {
     setDate(); $('#home-data-label').textContent = $('#review-data-label').textContent = demo ? '示例数据' : '我的记录';
-    renderCareHistory(); album?.render();
+    renderCareHistory(); album?.render(); shop?.render();
     trend.render();
   }
 
@@ -235,12 +238,15 @@
   window.addEventListener('pagehide', cleanupActivity);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderData(); });
   album = window.AlbumUI.create({ data, isDemo: () => demo, ready: () => readyPromise, save: saveRecord, remove: removeRecord, refresh: refreshRecords, goto, toast, backFromNew: () => goto(writeReturn) });
+  shop = window.DrinksUI.create({ isDemo: () => demo, goto, toast, toggleDemo });
   readyPromise = window.JournalStore.init().then(saved => { entries = saved; storageReady = true; renderData(); }).catch(error => { warning(`图文存储暂不可用：${error.message} 旧记录仍可查看，请勿清除浏览器数据。`); });
   if (window.Capacitor?.getPlatform() === 'android') {
     window.Capacitor.registerPlugin('App').addListener('backButton', () => {
       const dialog = document.querySelector('dialog[open]');
       if (dialog) { dialog.close(); return; }
       if (trend.closeMenus()) return;
+      if (page === 'drink-write' || page.startsWith('drink-edit/')) { $('#drink-editor-cancel').click(); return; }
+      if (page.startsWith('drink/')) { goto('drinks'); return; }
       if (page === 'write' || page.startsWith('edit/')) { $('#editor-cancel').click(); return; }
       if (page.startsWith('entry/')) { goto('album'); return; }
       if (page !== 'today') { goto('today'); return; }

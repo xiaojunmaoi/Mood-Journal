@@ -1,0 +1,60 @@
+const {execFileSync}=require('node:child_process'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const bin=process.env.AGENT_BROWSER_BIN,session=process.env.BROWSER_SESSION,base=process.env.TEST_URL||'http://127.0.0.1:4176';
+const run=(...args)=>execFileSync(bin,['--session',session,...args],{encoding:'utf8',timeout:60000});
+const ev=code=>JSON.parse(execFileSync(bin,['--session',session,'eval','--stdin'],{input:code,encoding:'utf8',timeout:120000}).trim());
+const wait=code=>assert.ok(ev('new Promise(resolve=>{const s=Date.now();const t=async()=>{try{if(await('+code+'))return resolve(true)}catch{};if(Date.now()-s>40000)return resolve(false);setTimeout(t,50)};t()})'),code);
+const check=(condition,label)=>{assert.ok(condition,label);console.log('PASS '+label)};
+run('open',base+'/#write');wait('document.body.dataset.surface==="editor" && document.querySelector("#editor-title").value===""');
+const assets=Array.from({length:9},(_,i)=>path.resolve('output/photo-fixtures/photo-'+(i+1)+'.jpg'));
+ev(`(()=>{
+ window.__draftWrites=0;const save=JournalStore.saveDraft;JournalStore.saveDraft=(...args)=>{window.__draftWrites++;return save(...args)};
+ document.querySelector('#photo-input').addEventListener('change',e=>{
+   window.__selected=[...e.target.files];window.__start=performance.now();window.__firstPreview=null;window.__heartbeat=0;window.__lastTick=performance.now();
+   window.__pulse=setInterval(()=>{const n=performance.now();window.__heartbeat=Math.max(window.__heartbeat,n-window.__lastTick);window.__lastTick=n;},20);
+   const observer=new MutationObserver(()=>{if(!window.__firstPreview&&document.querySelectorAll('.editor-photo').length){window.__firstPreview=performance.now()-window.__start}});
+   observer.observe(document.querySelector('#editor-photos'),{childList:true});window.__observer=observer;
+   setTimeout(()=>{const t=document.querySelector('#editor-body');t.value='整理照片时继续写下的文字';t.dispatchEvent(new Event('input',{bubbles:true}));window.__typedDuringProcessing=!document.querySelector('#photo-progress').hidden;},50);
+ },{capture:true,once:true});return true;
+})()`);
+run('upload','#photo-input',...assets);
+wait('document.querySelector("#photo-progress").hidden && document.querySelector("#photo-count").textContent==="9 / 9" && document.querySelector("#draft-status").textContent.includes("已保存")');
+const upload=ev(`(()=>{clearInterval(window.__pulse);window.__observer.disconnect();return {firstPreviewMs:Math.round(window.__firstPreview),draftWrites:window.__draftWrites,maxHeartbeatGapMs:Math.round(window.__heartbeat),typedDuringProcessing:window.__typedDuringProcessing,names:[...document.querySelectorAll('.photo-thumb img')].map(i=>i.alt)}})()`);
+check(upload.typedDuringProcessing,'typing remains available during 9-photo batch');
+check(upload.draftWrites===1,'batch commits exactly one final photo draft');
+check(upload.names.every((name,i)=>name==='photo-'+(i+1)+'.jpg'),'concurrent processing preserves selection order');
+check(upload.firstPreviewMs>0,'first finished photo appears before batch UI completes');
+run('reload');wait('document.querySelectorAll(".editor-photo").length===9');check(ev('document.querySelector("#editor-body").value==="整理照片时继续写下的文字"'),'reload restores all nine photos and concurrent typing');
+run('click','#editor-save');wait('location.hash.startsWith("#entry/")');
+check(ev('JournalStore.list().then(xs=>xs.some(x=>x.photos.length===9&&x.photos.every(p=>Math.max(p.width,p.height)<=1800)))'),'saved photo copies respect size limit');
+run('open',base+'/#write');wait('document.body.dataset.surface==="editor" && document.querySelectorAll(".editor-photo").length===0');
+run('upload','#photo-input',path.resolve('output/photo-fixtures/broken.jpg'),assets[0]);
+wait('document.querySelector("#photo-progress").hidden && document.querySelector("#photo-count").textContent==="1 / 9"');
+check(ev('!document.querySelector("#editor-error").hidden && document.querySelector("#editor-error").textContent.includes("无法解码")'),'bad image reports error while successful sibling stays available');
+run('click','#editor-save');wait('location.hash.startsWith("#entry/")');
+const checks=ev(`(async()=>{
+ const small=new File([await(await fetch('assets/drink-lime.webp')).blob()],'small.webp',{type:'image/webp'});
+ const file=new File([await(await fetch('assets/journal-demo-lake.webp')).blob()],'lake.webp',{type:'image/webp'});
+ const direct=await PhotoTools.normalize(small,{useWorker:false});
+ const before=new Uint8Array(await small.arrayBuffer()),after=new Uint8Array(await direct.blob.arrayBuffer());
+ const cleanReused=before.length===after.length&&before.every((n,i)=>n===after[i]);
+ const controller=new AbortController();let progress=0;
+ const cancelled=await PhotoTools.processMany(Array.from({length:9},(_,i)=>new File([file],'cancel-'+i+'.webp',{type:file.type})),{signal:controller.signal,onProgress:()=>{progress++;controller.abort()}});
+ return {cleanReused,fallback:direct.width===1200&&direct.height===900,cancelled:cancelled.cancelled,kept:cancelled.photos.length,progress};
+})()`);
+check(checks.cleanReused,'small metadata-free image avoids unnecessary encoding');
+check(checks.fallback,'page fallback processes images without workers');
+check(checks.cancelled&&checks.kept>=1&&checks.kept<9,'cancellation keeps completed photos and stops queue');
+// Benchmark old serial implementation versus the new pipeline using the same nine 12 MP files.
+run('open',base+'/#write');wait('document.body.dataset.surface==="editor"');
+ev('document.querySelector("#photo-input").addEventListener("change",e=>{window.__files=[...e.target.files]},{capture:true,once:true});true');
+run('upload','#photo-input',...assets);wait('document.querySelector("#photo-progress").hidden && document.querySelector("#photo-count").textContent==="9 / 9"');
+const timing=ev(`(async()=>{
+ const files=window.__files;
+ const oldNormalize=async(file)=>{const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});try{const r=Math.min(1,1800/Math.max(bitmap.width,bitmap.height)),c=document.createElement('canvas');c.width=Math.round(bitmap.width*r);c.height=Math.round(bitmap.height*r);const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(bitmap,0,0,c.width,c.height);await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',.84));c.width=c.height=1;}finally{bitmap.close()}};
+ let start=performance.now();for(const f of files)await oldNormalize(f);const oldMs=performance.now()-start;
+ start=performance.now();const result=await PhotoTools.processMany(files);const newMs=performance.now()-start;
+ return {photos:files.length,megapixelsEach:12,oldSerialMs:Math.round(oldMs),newPipelineMs:Math.round(newMs),processed:result.photos.length,deviceMemory:navigator.deviceMemory,hardwareConcurrency:navigator.hardwareConcurrency};
+})()`);
+check(timing.processed===9,'benchmark processed the complete batch');
+fs.writeFileSync('output/photo-performance.json',JSON.stringify({upload,checks,timing},null,2));console.log(JSON.stringify({upload,checks,timing},null,2));
+check(!run('errors').trim(),'no browser runtime errors during photo batches');

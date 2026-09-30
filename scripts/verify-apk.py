@@ -10,6 +10,8 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
                 "assets/public/nature-audio.js", "assets/public/care.css",
                 "assets/public/album.js", "assets/public/album.css", "assets/public/journal-store.js",
                 "assets/public/assets/capacitor-core.js"]
+    for name in ("drinks.js", "drinks.css", "drink-store.js", "photo-codec.js", "photo-tools.js", "photo-worker.js", "assets/drink-lime.webp", "assets/drink-orange.webp", "assets/drink-tea.webp", "assets/shop-osmanthus.webp"):
+        required.append("assets/public/" + name)
     for photo in ("lake", "cafe", "sunset"):
         required.append(f"assets/public/assets/journal-demo-{photo}.webp")
     for sound in ("rain", "ocean", "forest", "stream"):
@@ -27,6 +29,6 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
     info_path = Path(sys.argv[1]).with_name("package-info.txt")
     if info_path.exists():
         info = info_path.read_text(encoding="utf-8")
-        assert "name='com.xiaojunmaoi.xinqing.album.v120'" in info, "Unexpected package ID"
-        assert "versionName='1.2.0-preview'" in info, "Unexpected version"
-    print("APK verified: photo journal, three native plugins, photos, four sounds, local start URL.")
+        assert "name='com.xiaojunmaoi.xinqing.album.v130'" in info, "Unexpected package ID"
+        assert "versionName='1.3.0-preview'" in info, "Unexpected version"
+    print("APK verified: v1.3 drinks, photo pipeline, three native plugins, photos, four sounds, local start URL.")
