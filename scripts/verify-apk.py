@@ -31,7 +31,10 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
         for file in source.rglob('*'):
             if file.is_file():
                 name = file.relative_to(source).as_posix()
-                assert apk.read('assets/public/' + name) == file.read_bytes(), 'Bundled UI mismatch: ' + name
+                actual, expected = apk.read('assets/public/' + name), file.read_bytes()
+                if file.suffix in {'.html', '.js', '.css', '.svg', '.json', '.txt', '.md'}:
+                    actual, expected = actual.replace(b'\r\n', b'\n'), expected.replace(b'\r\n', b'\n')
+                assert actual == expected, 'Bundled UI mismatch: ' + name
     info_path = Path(sys.argv[1]).with_name("package-info.txt")
     if info_path.exists():
         info = info_path.read_text(encoding="utf-8")

@@ -11,6 +11,7 @@ def checksum(path):
 
 def prune_old_versions(root, version):
     """Delete only older version folders after BOTH current installers verify."""
+    root = root.resolve()
     current = root / ('v' + version)
     for platform, suffix in [('Android', '.apk'), ('iOS', '.ipa')]:
         folder = current / platform

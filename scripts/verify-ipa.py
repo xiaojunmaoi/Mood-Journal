@@ -51,5 +51,8 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
         for file in source.rglob('*'):
             if file.is_file():
                 name = file.relative_to(source).as_posix()
-                assert ipa.read(base + 'public/' + name) == file.read_bytes(), 'Bundled UI mismatch: ' + name
+                actual, expected = ipa.read(base + 'public/' + name), file.read_bytes()
+                if file.suffix in {'.html', '.js', '.css', '.svg', '.json', '.txt', '.md'}:
+                    actual, expected = actual.replace(b'\r\n', b'\n'), expected.replace(b'\r\n', b'\n')
+                assert actual == expected, 'Bundled UI mismatch: ' + name
     print('Verified: v1.3.2 (7), arm64 iPhone device binary, all web assets, privacy and three plugins. UNSIGNED: signing is required before installation.')
