@@ -26,9 +26,15 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
     for plugin in ("AppPlugin", "FilesystemPlugin", "SharePlugin"):
         assert any(plugin in item["classpath"] for item in plugins), f"Missing native plugin: {plugin}"
     assert apk.testzip() is None, "Corrupt APK archive"
+    source = Path('dist')
+    if source.exists():
+        for file in source.rglob('*'):
+            if file.is_file():
+                name = file.relative_to(source).as_posix()
+                assert apk.read('assets/public/' + name) == file.read_bytes(), 'Bundled UI mismatch: ' + name
     info_path = Path(sys.argv[1]).with_name("package-info.txt")
     if info_path.exists():
         info = info_path.read_text(encoding="utf-8")
-        assert "name='com.xiaojunmaoi.xinqing.album.v131'" in info, "Unexpected package ID"
-        assert "versionName='1.3.1-preview'" in info, "Unexpected version"
+        assert "name='com.xiaojunmaoi.xinqing.album.v132'" in info, "Unexpected package ID"
+        assert "versionName='1.3.2-preview'" in info, "Unexpected version"
     print("APK verified: v1.3 drinks, photo pipeline, three native plugins, photos, four sounds, local start URL.")

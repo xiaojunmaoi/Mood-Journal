@@ -41,9 +41,13 @@
       }
       wrapper.append(img); return wrapper;
     }
-    function tags(value) {
-      const n = el('div', 'drink-tags');
-      Store.tagList(value.tags).forEach(t => n.append(el('span', '', t)));
+    function tags(value, compact = false) {
+      const n = el('div', 'drink-tags'), tastes = Store.tagList(value.tags);
+      (compact ? tastes.slice(0, 2) : tastes).forEach(t => n.append(el('span', '', t)));
+      if (compact && tastes.length > 2) {
+        const more = el('span', '', '+' + (tastes.length - 2));
+        more.title = tastes.slice(2).join('、'); more.setAttribute('aria-label', '更多口味：' + more.title); n.append(more);
+      }
       if (value.alcohol !== 'unknown') n.append(el('span', 'drink-alcohol', value.alcohol === 'no' ? '无酒精' : '含酒精'));
       return n;
     }
@@ -61,8 +65,20 @@
       }
       for (const value of values) {
         const card = el('a', 'drink-card'); card.href = '#drink/' + encodeURIComponent(value.id); card.setAttribute('aria-label', '查看' + value.name);
-        card.append(cover(value), el('h3', '', value.name), tags(value));
-        const action = el('span', 'drink-cta', value.kind === 'recipe' ? '查看配方' : '查看推荐'); action.append(icon('arrow-right')); card.append(action);
+        const category = el('span', 'drink-type-tape' + (value.kind === 'recommendation' ? ' is-recommendation' : ''), value.kind === 'recipe' ? '可以自己调' : '好喝推荐');
+        const content = el('div', 'drink-card-content');
+        content.append(el('h3', '', value.name), tags(value, true));
+        const ingredientSummary = value.ingredients.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean).join(' · ');
+        const excerptText = value.kind === 'recipe' ? (ingredientSummary || value.note || value.steps) : value.note;
+        if (excerptText) {
+          const label = value.kind === 'recommendation' ? '一句话推荐' : ingredientSummary ? '配方摘记' : value.note ? '风味摘记' : '调制摘记';
+          const excerpt = el('div', 'drink-card-excerpt');
+          excerpt.append(el('span', '', label), el('p', '', excerptText));
+          content.append(excerpt);
+        }
+        const action = el('span', 'drink-cta', value.kind === 'recipe' ? '查看配方' : '查看详情');
+        action.append(icon('arrow-right')); content.append(action);
+        card.append(category, cover(value, 'drink-thumbnail'), content);
         card.addEventListener('click', () => { listScroll = window.scrollY; }); grid.append(card);
       }
       gc();

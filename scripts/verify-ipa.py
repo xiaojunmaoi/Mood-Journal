@@ -12,8 +12,8 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
     names = set(ipa.namelist())
     info = plistlib.loads(ipa.read(base + 'Info.plist'))
     assert info['CFBundleIdentifier'] == 'com.xiaojunmaoi.xinqing'
-    assert info['CFBundleShortVersionString'] == '1.3.1'
-    assert info['CFBundleVersion'] == '6'
+    assert info['CFBundleShortVersionString'] == '1.3.2'
+    assert info['CFBundleVersion'] == '7'
     assert info['MinimumOSVersion'] == '16.0'
     assert 'iPhoneOS' in info['CFBundleSupportedPlatforms'], 'Simulator app cannot be installed on iPhone'
     binary = ipa.read(base + info['CFBundleExecutable'])
@@ -52,4 +52,4 @@ with zipfile.ZipFile(sys.argv[1]) as ipa:
             if file.is_file():
                 name = file.relative_to(source).as_posix()
                 assert ipa.read(base + 'public/' + name) == file.read_bytes(), 'Bundled UI mismatch: ' + name
-    print('Verified: v1.3.1 (6), arm64 iPhone device binary, all web assets, privacy and three plugins. UNSIGNED: signing is required before installation.')
+    print('Verified: v1.3.2 (7), arm64 iPhone device binary, all web assets, privacy and three plugins. UNSIGNED: signing is required before installation.')

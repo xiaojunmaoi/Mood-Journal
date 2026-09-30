@@ -1,48 +1,39 @@
-# 安装包归档
+# 最新安装包
 
-安装包统一放在项目根目录的 `安装包/`。打开其中的 `README.md` 可按版本和系统选择文件，`latest.json` 指向最新已归档版本。
+项目根目录的 `安装包/` 仅保留最新完整版本，仍按系统分类。历史更新说明保留在 `docs/releases/`，不保留旧 APK / IPA。
 
 ```text
 安装包/
   README.md
   latest.json
-  v1.3.1/
+  v1.3.2/
     更新说明.md
     Android/
-      xinqing-album-v1.3.1-preview.apk
+      xinqing-album-v1.3.2-preview.apk
       manifest.json
       SHA256SUMS.txt
       package-info.txt
       signature.txt
     iOS/
-      xinqing-v1.3.1-unsigned.ipa
+      xinqing-v1.3.2-unsigned.ipa
       manifest.json
       SHA256SUMS.txt
       build-info.txt
       iphone-simulator.png
-  v1.3.0/
-  v1.2.0/
-  v1.1.1/
-  v1.1.0/
-  v1.0.0/
 ```
 
-## 每次更新的流程
+## 更新流程
 
-1. 更新网页和双端版本号，编译、校验通过后再归档。
-2. GitHub Android/iOS 工作流自动运行 `scripts/archive-installers.py`；下载的 artifact 已含版本和系统目录。构建临时文件不进入归档。
-3. 本地运行同一脚本将两端合并入总目录：先验证源 SHA256，再复制安装文件、签名/版本信息与更新说明。
-4. 同版本同名文件内容不一致时拒绝覆盖；历史安装包和原下载目录保留。归档不会卸载应用或移动用户日记。
-5. 提交源码与版本说明到 GitHub；安装包二进制不写入 Git 仓库。Actions 产物保留30天，本机归档无此下载期限。
+1. 编译新版 Android 和 iOS，检查签名/架构、版本、SHA256 和内置页面资源。
+2. 将两端下载到临时目录，使用归档脚本合并到新版目录。
+3. 传入 `--prune-old`：仅在新版两端安装包和清单都校验成功后，删除归档根目录中更旧的版本目录。遇到目录链接、新版本号或校验失败时停止清理。
+4. 清理本次项目中的旧安装包下载目录、安装包 ZIP 以及 GitHub Actions 上的旧安装包产物；保留代码历史、更新说明和构建日志。
+5. 最后更新 `latest.json` 和安装包索引。安装包不提交进 Git；Actions 下载期限为30天，本地归档不受此限制。
 
 ```powershell
-python scripts/archive-installers.py --version 1.3.1 --android-dir output/android-v1.3.1/v1.3.1/Android --ios-dir output/ios-v1.3.1/v1.3.1/iOS --source-sha <本次提交号>
+python scripts/archive-installers.py --version 1.3.2 --android-dir output/android-v1.3.2/v1.3.2/Android --ios-dir output/ios-v1.3.2/v1.3.2/iOS --source-sha <提交号> --prune-old
 ```
 
-同一版本先只传一个系统、另一个系统完成后再归档即可。脚本只用 Python 标准库。
+清理安装文件不会卸载手机上已经安装的 App，也不会处理日记数据库。Android 测试包使用独立包名，先从旧 App 导出日记与酒单，再导入新版本。iOS IPA 未签名，需要苹果签名后安装。
 
-## 安装与迁移
-
-- Android 测试包目前使用独立版本包名，不能承诺覆盖升级。保留旧版，在旧版分别导出日记和酒单，再导入新版；两个应用的数据独立。
-- iOS 归档明确标记为未签名，需要自己的苹果签名配置才能安装。
-- 查看 [Android安装说明](ANDROID.md)、[iOS安装说明](IOS.md)、[v1.3.1更新说明](releases/v1.3.1.md)。
+[Android 说明](ANDROID.md) · [iOS 说明](IOS.md) · [本版更新](releases/v1.3.2.md)

@@ -1,12 +1,12 @@
-# iOS v1.3.1 · 工程与未签名 IPA
+# iOS v1.3.2 · 工程与未签名 IPA
 
 [返回 README](../README.md) · [iOS 构建工作流](https://github.com/xiaojunmaoi/Mood-Journal/actions/workflows/ios-ipa.yml) · [当前网页](https://moodjournal-pi.vercel.app/)
 
-本版复用网页与 Android v1.3.1 的同一份界面，照片默认完整显示、口味可多选：新增解忧杂货店、个人酒单上传裁剪与日记多图后台处理；同时保留明显的图文日记入口、近 7 天 / 近 30 天 / 自定义心情轨迹、照片手帐、备份恢复与四种自然声。iOS 配置为 `com.xiaojunmaoi.xinqing`，版本 `1.3.1`，build `6`，最低 iOS 16。最低版本按本项目的原生弹层、动态视口与不可交互区域等页面特性设置，不仅取 Capacitor 的运行时最低要求。
+本版复用网页与 Android v1.3.2 的同一份界面，采用左图右文配方摘记卡，照片按原比例完整显示、口味可多选：新增解忧杂货店、个人酒单上传裁剪与日记多图后台处理；同时保留明显的图文日记入口、近 7 天 / 近 30 天 / 自定义心情轨迹、照片手帐、备份恢复与四种自然声。iOS 配置为 `com.xiaojunmaoi.xinqing`，版本 `1.3.2`，build `7`，最低 iOS 16。最低版本按本项目的原生弹层、动态视口与不可交互区域等页面特性设置，不仅取 Capacitor 的运行时最低要求。
 
 ## 下载文件与安装边界
 
-工作流生成 **`xinqing-v1.3.1-unsigned.ipa`**。它包含 Xcode 编译的 iPhone arm64 应用及本地资源，**没有苹果证书签名和设备描述文件，不能直接点开或拷贝到 iPhone 安装，也不是 TestFlight 邀请**。
+工作流生成 **`xinqing-v1.3.2-unsigned.ipa`**。它包含 Xcode 编译的 iPhone arm64 应用及本地资源，**没有苹果证书签名和设备描述文件，不能直接点开或拷贝到 iPhone 安装，也不是 TestFlight 邀请**。
 
 IPA 需要由拥有相应权限的苹果开发者使用有效证书与描述文件签名；设备直装必须匹配已登记的设备，TestFlight 则走 App Store Connect 的构建上传流程。不要把 `unsigned` 文件改名当作可安装正式包。工程已准备好，签名阶段仍需要你自己的 Apple 账号与相应配置。
 
@@ -47,7 +47,7 @@ npm run ios:open
 
 同一流程还编译 iPhone 模拟器版本，启动并保存 `iphone-simulator.png`。模拟器截图只证明当次启动页面，不等于真机安装、全部交互或系统权限流程通过。相册/拍照、原生日期选择器、系统分享、软键盘和长期本地存储仍需在真实 iPhone 验证。
 
-下载 artifact `xinqing-ios-v1.3.1-unsigned`，其中按 `v1.3.1/iOS/` 归档，包含 IPA、SHA256、源码提交号、模拟器截图与这份说明。Actions 文件保留 30 天；下载到本地后不受该保留期限影响。
+下载 artifact `xinqing-ios-v1.3.2-unsigned`，其中按 `v1.3.2/iOS/` 归档，包含 IPA、SHA256、源码提交号、模拟器截图与这份说明。Actions 文件保留 30 天；下载到本地后不受该保留期限影响。
 
 ## 日记迁移
 

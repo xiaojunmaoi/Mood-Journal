@@ -1,4 +1,4 @@
-"""Copy verified installers into one version/platform library; never delete old downloads."""
+"""Archive verified installers; optionally keep only the latest complete Android/iOS release."""
 from pathlib import Path
 import argparse, hashlib, json, re, shutil
 from datetime import date
@@ -8,12 +8,39 @@ def checksum(path):
     with path.open('rb') as stream:
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
+
+def prune_old_versions(root, version):
+    """Delete only older version folders after BOTH current installers verify."""
+    current = root / ('v' + version)
+    for platform, suffix in [('Android', '.apk'), ('iOS', '.ipa')]:
+        folder = current / platform
+        packages = list(folder.glob('*' + suffix))
+        manifest = folder / 'manifest.json'
+        if len(packages) != 1 or not manifest.is_file():
+            raise SystemExit('Keep previous installers: both current platforms must be archived first')
+        info = json.loads(manifest.read_text(encoding='utf-8'))
+        if info.get('version') != version or info.get('sha256') != checksum(packages[0]):
+            raise SystemExit('Keep previous installers: current package verification failed')
+    current_version = tuple(int(n) for n in version.split('.'))
+    candidates = []
+    for directory in root.iterdir():
+        if not directory.is_dir() or not re.fullmatch(r'v\d+\.\d+(?:\.\d+)?', directory.name) or directory == current:
+            continue
+        resolved = directory.resolve()
+        if directory.is_symlink() or resolved != directory.absolute() or resolved.parent != root.resolve() or tuple(int(n) for n in directory.name[1:].split('.')) >= current_version:
+            raise SystemExit('Refusing unsafe or newer installer directory: ' + str(directory))
+        candidates.append(resolved)
+    for directory in candidates:
+        shutil.rmtree(directory)
+        print('Removed previous installer version: ' + str(directory))
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--version', required=True)
     parser.add_argument('--android-dir')
     parser.add_argument('--ios-dir')
     parser.add_argument('--source-sha', default='')
+    parser.add_argument('--prune-old', action='store_true', help='After both platforms verify, remove older version folders inside --root')
     parser.add_argument('--root', default=str(PROJECT / '安装包'))
     args = parser.parse_args()
     if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?', args.version):
@@ -57,9 +84,11 @@ def main():
     notes = PROJECT / 'docs' / 'releases' / ('v' + args.version + '.md')
     if notes.exists():
         shutil.copy2(notes, release / '更新说明.md')
+    if args.prune_old:
+        prune_old_versions(root, args.version)
     versions = sorted([p for p in root.iterdir() if p.is_dir() and re.fullmatch(r'v\d+\.\d+(?:\.\d+)?', p.name)],
                       key=lambda p: tuple(int(n) for n in p.name[1:].split('.')), reverse=True)
-    lines = ['# 心晴安装包', '', '按版本和系统归档；最新版本排在最上面。旧文件保留。', '',
+    lines = ['# 心晴安装包', '', '仅保留最新完整版本；按 Android / iOS 分类。', '',
              'Android 测试版与旧版并存，升级前分别备份日记和酒单。iOS IPA 需要苹果签名后安装。', '',
              '| 版本 | Android | iOS | 更新说明 |', '|---|---|---|---|']
     for directory in versions:
