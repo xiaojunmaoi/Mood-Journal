@@ -10,7 +10,7 @@
 
 ## 原型展示
 
-以下均为当前实现的实际页面，按电脑版与手机版展示，覆盖记录、回顾、日记浏览与编辑、自我关怀、酒单浏览与编辑。点击图片可查看原图。
+以下均为当前实现的实际页面，按电脑版与手机版展示，覆盖记录、回顾、日记浏览与编辑、自我关怀、酒单浏览与编辑。并排截图统一展示高度，保留原图比例与完整内容；点击图片可查看原图。
 
 截图使用内置示例手帐与虚构素材，不含个人记录。手机图展示网页的响应式布局，长图用于完整呈现页面，不代表一屏可见或已经通过真机验收。采集信息见 [截图说明](docs/images/current/README.md)。
 
@@ -21,46 +21,46 @@
 ![电脑版今日心情](docs/images/current/home-desktop.jpg)
 
 | 情绪回顾 | 自定义日期 |
-|---|---|
-| ![电脑版情绪回顾](docs/images/current/review-desktop.jpg) | ![电脑版自定义日期](docs/images/current/date-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/review-desktop.jpg"><img src="docs/images/current/review-desktop.jpg" height="240" alt="电脑版情绪回顾"></a> | <a href="docs/images/current/date-desktop.jpg"><img src="docs/images/current/date-desktop.jpg" height="240" alt="电脑版自定义日期"></a> |
 
 | 生活影集 | 日记详情 |
-|---|---|
-| ![电脑版生活影集](docs/images/current/album-desktop.jpg) | ![电脑版日记详情](docs/images/current/journal-detail-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/album-desktop.jpg"><img src="docs/images/current/album-desktop.jpg" height="240" alt="电脑版生活影集"></a> | <a href="docs/images/current/journal-detail-desktop.jpg"><img src="docs/images/current/journal-detail-desktop.jpg" height="240" alt="电脑版日记详情"></a> |
 
 | 图文日记编辑 | 自我关怀 |
-|---|---|
-| ![电脑版图文日记编辑](docs/images/current/journal-editor-desktop.jpg) | ![电脑版自我关怀](docs/images/current/care-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/journal-editor-desktop.jpg"><img src="docs/images/current/journal-editor-desktop.jpg" height="240" alt="电脑版图文日记编辑"></a> | <a href="docs/images/current/care-desktop.jpg"><img src="docs/images/current/care-desktop.jpg" height="240" alt="电脑版自我关怀"></a> |
 
 | 自然声播放器 | 呼吸练习 |
-|---|---|
-| ![电脑版自然声播放器](docs/images/current/noise-desktop.jpg) | ![电脑版呼吸练习](docs/images/current/breathing-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/noise-desktop.jpg"><img src="docs/images/current/noise-desktop.jpg" height="240" alt="电脑版自然声播放器"></a> | <a href="docs/images/current/breathing-desktop.jpg"><img src="docs/images/current/breathing-desktop.jpg" height="240" alt="电脑版呼吸练习"></a> |
 
 | 散步建议 | 骏马特调酒单 |
-|---|---|
-| ![电脑版散步建议](docs/images/current/walk-desktop.jpg) | ![电脑版骏马特调酒单](docs/images/current/drinks-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/walk-desktop.jpg"><img src="docs/images/current/walk-desktop.jpg" height="240" alt="电脑版散步建议"></a> | <a href="docs/images/current/drinks-desktop.jpg"><img src="docs/images/current/drinks-desktop.jpg" height="240" alt="电脑版骏马特调酒单"></a> |
 
 | 配方详情 | 酒单编辑 |
-|---|---|
-| ![电脑版配方详情](docs/images/current/drink-detail-desktop.jpg) | ![电脑版酒单编辑](docs/images/current/drink-editor-desktop.jpg) |
+|:---:|:---:|
+| <a href="docs/images/current/drink-detail-desktop.jpg"><img src="docs/images/current/drink-detail-desktop.jpg" height="240" alt="电脑版配方详情"></a> | <a href="docs/images/current/drink-editor-desktop.jpg"><img src="docs/images/current/drink-editor-desktop.jpg" height="240" alt="电脑版酒单编辑"></a> |
 
 ### 手机版
 
 | 今日心情 | 情绪回顾 | 自定义日期 |
-|---|---|---|
-| <img src="docs/images/current/home-mobile.jpg" width="260" alt="手机版今日心情，完整记录表单、趋势与关怀便签"> | <img src="docs/images/current/review-mobile.jpg" width="260" alt="手机版情绪回顾，趋势与低落因素"> | <img src="docs/images/current/date-mobile.jpg" width="260" alt="手机版自定义日期底部面板"> |
+|:---:|:---:|:---:|
+| <a href="docs/images/current/home-mobile.jpg"><img src="docs/images/current/home-mobile.jpg" height="320" alt="手机版今日心情，完整记录表单、趋势与关怀便签"></a> | <a href="docs/images/current/review-mobile.jpg"><img src="docs/images/current/review-mobile.jpg" height="320" alt="手机版情绪回顾，趋势与低落因素"></a> | <a href="docs/images/current/date-mobile.jpg"><img src="docs/images/current/date-mobile.jpg" height="320" alt="手机版自定义日期底部面板"></a> |
 
 | 生活影集 | 日记详情 | 图文日记编辑 |
-|---|---|---|
-| <img src="docs/images/current/album-mobile.jpg" width="260" alt="手机版生活影集，同篇图文纵向排列"> | <img src="docs/images/current/journal-detail-mobile.jpg" width="260" alt="手机版日记详情，完整照片与正文"> | <img src="docs/images/current/journal-editor-mobile.jpg" width="260" alt="手机版图文日记编辑，日期、正文、照片与心情"> |
+|:---:|:---:|:---:|
+| <a href="docs/images/current/album-mobile.jpg"><img src="docs/images/current/album-mobile.jpg" height="320" alt="手机版生活影集，同篇图文纵向排列"></a> | <a href="docs/images/current/journal-detail-mobile.jpg"><img src="docs/images/current/journal-detail-mobile.jpg" height="320" alt="手机版日记详情，完整照片与正文"></a> | <a href="docs/images/current/journal-editor-mobile.jpg"><img src="docs/images/current/journal-editor-mobile.jpg" height="320" alt="手机版图文日记编辑，日期、正文、照片与心情"></a> |
 
 | 自我关怀 | 自然声播放器 | 呼吸练习 | 散步建议 |
-|---|---|---|---|
-| <img src="docs/images/current/care-mobile.jpg" width="200" alt="手机版自我关怀入口与关怀记录"> | <img src="docs/images/current/noise-mobile.jpg" width="200" alt="手机版自然声选择、音量与定时"> | <img src="docs/images/current/breathing-mobile.jpg" width="200" alt="手机版一分钟呼吸练习"> | <img src="docs/images/current/walk-mobile.jpg" width="200" alt="手机版五分钟散步建议"> |
+|:---:|:---:|:---:|:---:|
+| <a href="docs/images/current/care-mobile.jpg"><img src="docs/images/current/care-mobile.jpg" height="320" alt="手机版自我关怀入口与关怀记录"></a> | <a href="docs/images/current/noise-mobile.jpg"><img src="docs/images/current/noise-mobile.jpg" height="320" alt="手机版自然声选择、音量与定时"></a> | <a href="docs/images/current/breathing-mobile.jpg"><img src="docs/images/current/breathing-mobile.jpg" height="320" alt="手机版一分钟呼吸练习"></a> | <a href="docs/images/current/walk-mobile.jpg"><img src="docs/images/current/walk-mobile.jpg" height="320" alt="手机版五分钟散步建议"></a> |
 
 | 骏马特调酒单 | 配方详情 | 酒单编辑 |
-|---|---|---|
-| <img src="docs/images/current/drinks-mobile.jpg" width="260" alt="手机版左图右文配方摘记卡"> | <img src="docs/images/current/drink-detail-mobile.jpg" width="260" alt="手机版配方照片、材料、步骤与心得"> | <img src="docs/images/current/drink-editor-mobile.jpg" width="260" alt="手机版酒单编辑，封面、类别、口味与配方"> |
+|:---:|:---:|:---:|
+| <a href="docs/images/current/drinks-mobile.jpg"><img src="docs/images/current/drinks-mobile.jpg" height="320" alt="手机版左图右文配方摘记卡"></a> | <a href="docs/images/current/drink-detail-mobile.jpg"><img src="docs/images/current/drink-detail-mobile.jpg" height="320" alt="手机版配方照片、材料、步骤与心得"></a> | <a href="docs/images/current/drink-editor-mobile.jpg"><img src="docs/images/current/drink-editor-mobile.jpg" height="320" alt="手机版酒单编辑，封面、类别、口味与配方"></a> |
 
 ## 功能介绍
 
